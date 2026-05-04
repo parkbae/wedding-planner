@@ -1710,13 +1710,13 @@ function renderRow(secId, row) {
           value="${isNone ? '' : (row.depositAmt||'')}"
           placeholder="0"
           ${isNone ? 'disabled style="display:none"' : ''}
-          onchange="updateRowNum('${secId}','${row.id}','depositAmt',this.value)">
+          oninput="updateRowNum('${secId}','${row.id}','depositAmt',this.value)">
       </div>
     </td>
     <td><input class="date-edit" value="${esc(row.depositDate)}" placeholder="yy.mm.dd" onchange="updateRow('${secId}','${row.id}','depositDate',this.value)"></td>
-    <td class="num"><input class="num-edit" type="number" id="balance-input-${row.id}" value="${row.balanceAmt||''}" placeholder="0" onchange="updateRowNum('${secId}','${row.id}','balanceAmt',this.value)"></td>
+    <td class="num"><input class="num-edit" type="number" id="balance-input-${row.id}" value="${row.balanceAmt||''}" placeholder="0" oninput="updateRowNum('${secId}','${row.id}','balanceAmt',this.value)"></td>
     <td><input class="date-edit" value="${esc(row.balanceDate)}" placeholder="yy.mm.dd" onchange="updateRow('${secId}','${row.id}','balanceDate',this.value)"></td>
-    <td class="num"><input class="total-edit" type="number" id="rowtotal-input-${row.id}" value="${row.total||''}" placeholder="0" onchange="updateRowTotal('${secId}','${row.id}',this.value)" title="총금액 직접 입력 가능"></td>
+    <td class="num"><input class="total-edit" type="number" id="rowtotal-input-${row.id}" value="${row.total||''}" placeholder="0" oninput="updateRowTotal('${secId}','${row.id}',this.value)" title="총금액 직접 입력 가능"></td>
     <td>
       <select class="select-edit" onchange="updateRow('${secId}','${row.id}','pay',this.value)">
         <option value="" ${!row.pay?'selected':''}>-</option>
@@ -2932,7 +2932,7 @@ async function saveAll() {
       const ok = await saveToSupabase();
       showToast(ok ? '☁️ 클라우드 저장됐어요!' : '💾 로컬 저장됐어요 (네트워크 오류)');
     } else {
-      showToast('💾 로컬 저장됐어요 (☁️ 클라우드 저장은 PRO 전용)');
+      showToast('💾 저장됐어요!');
     }
   } else {
     showToast('💾 저장됐어요!');
@@ -2942,9 +2942,8 @@ async function saveAll() {
 
 // ── 기존 loadAll 오버라이드 ──
 function loadAll() {
-  // Supabase 모드면 loadFromSupabase()가 처리
-  if (sbClient && currentUser) return false;
-  // localStorage 폴백
+  // Supabase 로그인 상태면 loadFromSupabase()가 처리하므로 스킵
+  // 단, localStorage에 데이터가 있으면 초기 렌더링에 사용 (Supabase 응답 전 깜빡임 방지)
   let raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
     const rawV3 = localStorage.getItem(STORAGE_KEY_V3);
