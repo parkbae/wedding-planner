@@ -128,7 +128,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 
 
 /* ── 스티커 메모 ── */
-.sticky-memo{position:fixed;width:200px;min-height:100px;border-radius:6px;z-index:300;
+.sticky-memo{position:absolute;width:200px;min-height:100px;border-radius:6px;z-index:300;
   box-shadow:3px 4px 14px rgba(0,0,0,0.18);cursor:default;animation:memoAppear 0.2s ease;}
 @keyframes memoAppear{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
 .sticky-memo-header{display:flex;justify-content:space-between;align-items:center;
@@ -143,8 +143,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .sticky-memo-link{display:block;padding:2px 10px 8px;font-size:10px;color:#1a73e8;
   text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sticky-memo-link:hover{text-decoration:underline;}
-/* 메모 FAB 그룹 */
-/* memo-fab-group 제거됨 (통합 FAB으로 대체) */
+/* 메모 컨테이너 - 페이지 흐름에 맞게 absolute 포지셔닝 */
+#memo-container{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:300;}
+#memo-container .sticky-memo{pointer-events:all;}
 /* 배치 오버레이 */
 .memo-placement-overlay{display:none;position:fixed;inset:0;z-index:250;
   cursor:crosshair;background:rgba(201,169,110,0.06);}
@@ -300,6 +301,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .todo-list{display:flex;flex-direction:column;gap:7px;}
 .todo-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:var(--warm);border:1px solid var(--border);animation:fadeIn 0.2s ease;transition:border-color 0.2s,box-shadow 0.2s;}
 .todo-item:hover{border-color:rgba(201,169,110,0.5);box-shadow:0 1px 6px rgba(201,169,110,0.1);}
+/* 드래그 정렬 핸들 */
+.todo-drag-handle{cursor:grab;color:var(--border);font-size:14px;flex-shrink:0;padding:0 2px;line-height:1;user-select:none;transition:color 0.15s;}
+.todo-item:hover .todo-drag-handle{color:var(--text-l);}
+.todo-drag-handle:active{cursor:grabbing;}
+.todo-item.dragging{opacity:0.4;background:var(--blush);border-style:dashed;}
+.todo-item.drag-over{border-top:2px solid var(--gold);}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 .todo-item.done{background:#f7f7f7;border-color:#ebebeb;}
 .todo-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.2s;background:white;}
@@ -368,13 +375,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 /* 액션 행 */
 .fab-action-row{display:flex;border-top:1px solid var(--border);}
 .fab-action-btn{flex:1;background:none;border:none;cursor:pointer;
-  padding:9px 6px;font-size:11px;color:var(--text-l);
+  padding:10px 6px 8px;font-size:11px;color:var(--text-l);
   font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;
-  display:flex;flex-direction:column;align-items:center;gap:3px;}
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;}
 .fab-action-btn:hover{background:var(--blush);color:var(--navy);}
 .fab-action-btn:not(:last-child){border-right:1px solid var(--border);}
-.fab-action-icon{font-size:15px;}
-.fab-action-label{font-size:9px;font-weight:500;}
+.fab-action-icon{font-size:15px;line-height:1;}
+.fab-action-label{font-size:10px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52px;text-align:center;}
 /* 메모 드롭다운 */
 .fab-memo-group{position:relative;}
 .fab-memo-dropdown{display:none;position:absolute;bottom:100%;right:0;
@@ -451,10 +458,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .guideline-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:20px;}
 .gl-card{background:white;border-radius:14px;padding:18px;box-shadow:0 2px 12px rgba(44,49,73,0.06);border-top:3px solid var(--gold);position:relative;}
 .gl-card-name{font-size:12px;font-weight:600;color:var(--navy);margin-bottom:10px;}
-.gl-pct-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.gl-pct-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 .gl-pct-input{width:60px;border:1px solid var(--border);border-radius:7px;padding:5px 8px;font-size:13px;font-weight:600;text-align:right;outline:none;font-family:'Noto Sans KR',sans-serif;color:var(--navy);}
 .gl-pct-input:focus{border-color:var(--gold);}
 .gl-pct-label{font-size:11px;color:var(--text-l);}
+/* 금액 직접 입력 행 */
+.gl-amt-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.gl-amt-input{width:90px;border:1px solid var(--border);border-radius:7px;padding:4px 8px;font-size:12px;font-weight:600;text-align:right;outline:none;font-family:'Noto Sans KR',sans-serif;color:var(--navy);background:rgba(201,169,110,0.05);}
+.gl-amt-input:focus{border-color:var(--gold);background:rgba(201,169,110,0.1);}
+.gl-amt-label{font-size:11px;color:var(--text-l);flex-shrink:0;}
+.gl-or-divider{font-size:10px;color:var(--border);text-align:center;margin:2px 0 6px;}
 .gl-amount{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:6px;}
 .gl-used{font-size:11px;color:var(--text-l);}
 .gl-bar-wrap{height:6px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:8px;}
@@ -495,6 +508,90 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .lsb-limit{font-size:10px;color:var(--text-l);}
 .lsb-mini-bar{height:4px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:6px;width:80px;}
 .lsb-mini-fill{height:100%;border-radius:99px;transition:width 0.4s;}
+
+/* ── 부동산 탭 ── */
+.re-header-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.re-add-btn{background:var(--navy);color:white;border:none;border-radius:9px;padding:9px 18px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;display:flex;align-items:center;gap:6px;transition:all 0.2s;}
+.re-add-btn:hover{background:var(--navy-l);}
+.re-filter-tabs{display:flex;gap:6px;}
+.re-filter-btn{background:white;border:1px solid var(--border);border-radius:99px;padding:5px 13px;font-size:11px;color:var(--text-l);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;}
+.re-filter-btn.active{background:var(--navy);border-color:var(--navy);color:white;font-weight:500;}
+.re-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;}
+.re-card{background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(44,49,73,0.07);border:1.5px solid transparent;transition:all 0.2s;position:relative;}
+.re-card:hover{border-color:var(--gold);box-shadow:0 4px 24px rgba(44,49,73,0.12);}
+.re-card.re-fav{border-color:var(--rose);}
+.re-card-top{padding:16px 18px 12px;border-bottom:1px solid var(--border);}
+.re-card-name-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.re-card-name{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:600;color:var(--navy);flex:1;line-height:1.3;}
+.re-fav-btn{background:none;border:none;font-size:16px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;opacity:0.35;transition:opacity 0.2s;}
+.re-fav-btn.on{opacity:1;}
+.re-del-btn-top{background:none;border:none;cursor:pointer;color:var(--border);font-size:14px;padding:2px 4px;border-radius:4px;transition:color 0.2s;flex-shrink:0;}
+.re-del-btn-top:hover{color:var(--rose);background:rgba(201,131,122,0.08);}
+.re-type-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
+.re-type-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;}
+.rtb-monthly{background:rgba(122,171,138,0.15);color:#4a8a5e;}
+.rtb-jeonse{background:rgba(139,159,201,0.15);color:#4a6da8;}
+.rtb-buy{background:rgba(201,169,110,0.15);color:#8a6a2e;}
+.re-location-row{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-l);}
+.re-location-row a{color:var(--gold);text-decoration:none;font-size:10px;border:1px solid rgba(201,169,110,0.4);border-radius:5px;padding:1px 6px;transition:all 0.2s;}
+.re-location-row a:hover{background:rgba(201,169,110,0.1);}
+.re-card-body{padding:14px 18px;}
+.re-price-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.re-price-item{background:var(--cream);border-radius:10px;padding:8px 10px;text-align:center;}
+.re-price-label{font-size:9px;color:var(--text-l);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.re-price-val{font-family:'DM Serif Display',serif;font-size:14px;color:var(--navy);}
+.re-price-val.empty{color:var(--border);font-size:11px;font-family:'Noto Sans KR',sans-serif;}
+.re-price-deposit{font-size:9px;color:var(--text-l);margin-top:1px;}
+.re-meta-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.re-meta-item{font-size:11px;color:var(--text-l);display:flex;align-items:center;gap:3px;}
+.re-meta-item span.val{color:var(--text);font-weight:500;}
+.re-link-row{margin-bottom:10px;}
+.re-link-row a{font-size:11px;color:#1a73e8;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.re-link-row a:hover{text-decoration:underline;}
+.re-memo-box{background:var(--cream);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--text);line-height:1.55;white-space:pre-wrap;word-break:break-word;}
+.re-card-footer{padding:10px 18px 14px;display:flex;justify-content:space-between;align-items:center;}
+.re-status-select{border:1px solid var(--border);border-radius:7px;padding:4px 8px;font-size:11px;font-family:'Noto Sans KR',sans-serif;outline:none;cursor:pointer;background:white;color:var(--text);}
+.re-status-select:focus{border-color:var(--gold);}
+.re-edit-btn{background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;font-size:11px;color:var(--text-l);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;}
+.re-edit-btn:hover{border-color:var(--gold);color:var(--navy);}
+.re-empty{text-align:center;padding:48px 24px;color:var(--text-l);}
+.re-empty-icon{font-size:40px;margin-bottom:12px;}
+.re-empty-msg{font-size:13px;margin-bottom:16px;}
+.re-budget-link-bar{background:var(--navy);border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.re-budget-link-bar .rbl-label{font-size:11px;color:rgba(255,255,255,0.55);margin-bottom:2px;}
+.re-budget-link-bar .rbl-val{font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold);}
+.re-budget-items{display:flex;gap:20px;flex-wrap:wrap;}
+.re-budget-item{text-align:center;}
+
+/* 부동산 모달 */
+.re-modal{width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:0;}
+.re-modal-header{background:var(--navy);padding:20px 24px 16px;color:white;}
+.re-modal-header h3{font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:2px;}
+.re-modal-header p{font-size:11px;color:rgba(255,255,255,0.45);}
+.re-modal-body{padding:20px 24px;}
+.re-form-section{margin-bottom:18px;}
+.re-form-label{font-size:11px;font-weight:600;color:var(--navy);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:block;}
+.re-form-input{width:100%;border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;color:var(--text);transition:border 0.2s;}
+.re-form-input:focus{border-color:var(--gold);}
+.re-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.re-form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.re-type-toggle-group{display:flex;gap:6px;flex-wrap:wrap;}
+.re-type-toggle{border:1px solid var(--border);border-radius:99px;padding:6px 14px;font-size:11px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;background:white;color:var(--text-l);transition:all 0.2s;}
+.re-type-toggle.on-monthly{background:#e8f5e9;border-color:#7aab8a;color:#4a8a5e;}
+.re-type-toggle.on-jeonse{background:#e8eaf6;border-color:#7986cb;color:#4a6da8;}
+.re-type-toggle.on-buy{background:rgba(201,169,110,0.12);border-color:var(--gold);color:#8a6a2e;}
+.re-price-sub-section{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-top:8px;background:var(--cream);}
+.re-price-sub-label{font-size:10px;font-weight:600;margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;}
+.re-textarea{width:100%;border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;resize:vertical;min-height:70px;color:var(--text);transition:border 0.2s;}
+.re-textarea:focus{border-color:var(--gold);}
+.re-modal-footer{padding:12px 24px 20px;display:flex;gap:8px;justify-content:flex-end;}
+.re-save-btn{background:var(--navy);color:white;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;}
+.re-save-btn:hover{background:var(--navy-l);}
+@media(max-width:600px){
+  .re-grid{grid-template-columns:1fr;}
+  .re-price-grid{grid-template-columns:1fr 1fr;}
+  .re-form-row,.re-form-row-3{grid-template-columns:1fr;}
+}
 </style></head><body>
 
 <div class="save-bar">
@@ -745,6 +842,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   </div>
 </div>
 
+<div style="position:relative;">
+<div id="memo-container"></div>
 <div class="container">
   <!-- 플랜 상태 배너 -->
   <div class="plan-banner" id="plan-banner" style="display:none">
@@ -758,6 +857,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
     <button class="main-tab" data-panel="tab-budget" onclick="switchMain('tab-budget')">💰 예산 플래너</button>
     <button class="main-tab" data-panel="tab-todo" onclick="switchMain('tab-todo')">✅ 투두리스트</button>
     <button class="main-tab" data-panel="tab-request" onclick="switchMain('tab-request')" id="tab-btn-request">💬 요청함</button>
+    <button class="main-tab" data-panel="tab-realestate" onclick="switchMain('tab-realestate')" id="tab-btn-realestate">🏠 부동산</button>
   </div>
 
   <div class="budget-setup">
@@ -939,6 +1039,168 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
       </div>
     </div>
   </div>
+
+  <!-- TAB: 부동산 -->
+  <div class="main-panel" id="tab-realestate">
+
+    <!-- 예산 연동 바 -->
+    <div class="re-budget-link-bar">
+      <div class="re-budget-items">
+        <div class="re-budget-item">
+          <div class="rbl-label">총 가용 예산</div>
+          <div class="rbl-val" id="re-total-budget">0 만원</div>
+        </div>
+        <div class="re-budget-item" style="border-left:1px solid rgba(255,255,255,0.15);padding-left:20px;">
+          <div class="rbl-label">신혼집 배정 예산</div>
+          <div class="rbl-val" id="re-house-budget">0 만원</div>
+        </div>
+        <div class="re-budget-item" style="border-left:1px solid rgba(255,255,255,0.15);padding-left:20px;">
+          <div class="rbl-label">검토 중인 집</div>
+          <div class="rbl-val" id="re-count-display">0개</div>
+        </div>
+        <div class="re-budget-item" style="border-left:1px solid rgba(255,255,255,0.15);padding-left:20px;">
+          <div class="rbl-label">관심 (⭐ 즐겨찾기)</div>
+          <div class="rbl-val" id="re-fav-count">0개</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 헤더 바 -->
+    <div class="re-header-bar">
+      <div class="re-filter-tabs">
+        <button class="re-filter-btn active" onclick="reFilterBy('all', this)">전체</button>
+        <button class="re-filter-btn" onclick="reFilterBy('monthly', this)">월세</button>
+        <button class="re-filter-btn" onclick="reFilterBy('jeonse', this)">전세</button>
+        <button class="re-filter-btn" onclick="reFilterBy('buy', this)">매매</button>
+        <button class="re-filter-btn" onclick="reFilterBy('fav', this)">⭐ 관심</button>
+      </div>
+      <button class="re-add-btn" onclick="openReModal()">＋ 매물 추가</button>
+    </div>
+
+    <!-- 카드 그리드 -->
+    <div class="re-grid" id="re-grid">
+      <div class="re-empty" id="re-empty">
+        <div class="re-empty-icon">🏡</div>
+        <div class="re-empty-msg">아직 등록된 매물이 없어요<br>임장하면서 함께 정보를 쌓아가요!</div>
+        <button class="re-add-btn" onclick="openReModal()" style="margin:0 auto;">＋ 첫 번째 매물 추가하기</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<!-- ── 부동산 추가/편집 모달 ── -->
+<div class="modal-overlay" id="re-modal-overlay">
+  <div class="re-modal modal" style="padding:0;width:480px;">
+    <div class="re-modal-header">
+      <h3 id="re-modal-title">🏠 매물 등록</h3>
+      <p>임장 정보를 함께 기록해요</p>
+    </div>
+    <div class="re-modal-body">
+      <input type="hidden" id="re-edit-id">
+
+      <div class="re-form-section">
+        <label class="re-form-label">🏢 부동산명 / 매물명</label>
+        <input class="re-form-input" type="text" id="re-name" placeholder="예) 마포 래미안 101동 1502호">
+      </div>
+
+      <div class="re-form-section">
+        <label class="re-form-label">📍 위치 (주소)</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="re-form-input" type="text" id="re-location" placeholder="예) 서울시 마포구 아현동 123-4" style="flex:1;">
+          <button onclick="openMapSearch()" style="background:var(--gold);color:white;border:none;border-radius:9px;padding:9px 14px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;flex-shrink:0;">🗺 지도</button>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+          <button onclick="openNaverMap()" style="background:white;border:1px solid #03c75a;border-radius:7px;padding:5px 12px;font-size:11px;color:#03c75a;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:600;">N 네이버지도</button>
+          <button onclick="openKakaoMap()" style="background:white;border:1px solid #fee500;border-radius:7px;padding:5px 12px;font-size:11px;color:#3c1e1e;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:600;">K 카카오맵</button>
+        </div>
+      </div>
+
+      <div class="re-form-section">
+        <label class="re-form-label">🏷 거래 유형 (복수 선택 가능)</label>
+        <div class="re-type-toggle-group">
+          <button class="re-type-toggle" id="rtt-monthly" onclick="toggleReType('monthly', this)">월세</button>
+          <button class="re-type-toggle" id="rtt-jeonse" onclick="toggleReType('jeonse', this)">전세</button>
+          <button class="re-type-toggle" id="rtt-buy"    onclick="toggleReType('buy', this)">매매</button>
+        </div>
+      </div>
+
+      <div class="re-price-sub-section" id="re-monthly-section" style="display:none;">
+        <div class="re-price-sub-label" style="color:#4a8a5e;">월세</div>
+        <div class="re-form-row">
+          <div>
+            <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">보증금 (만원)</label>
+            <input class="re-form-input" type="number" id="re-monthly-deposit" placeholder="0">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">월세 (만원/월)</label>
+            <input class="re-form-input" type="number" id="re-monthly-rent" placeholder="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="re-price-sub-section" id="re-jeonse-section" style="display:none;margin-top:8px;">
+        <div class="re-price-sub-label" style="color:#4a6da8;">전세</div>
+        <div>
+          <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">전세금 (만원)</label>
+          <input class="re-form-input" type="number" id="re-jeonse-price" placeholder="0">
+        </div>
+      </div>
+
+      <div class="re-price-sub-section" id="re-buy-section" style="display:none;margin-top:8px;">
+        <div class="re-price-sub-label" style="color:#8a6a2e;">매매</div>
+        <div>
+          <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">매매가 (만원)</label>
+          <input class="re-form-input" type="number" id="re-buy-price" placeholder="0">
+        </div>
+      </div>
+
+      <div class="re-form-section" style="margin-top:16px;">
+        <label class="re-form-label">📐 기본 정보</label>
+        <div class="re-form-row-3">
+          <div>
+            <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">전용면적 (㎡)</label>
+            <input class="re-form-input" type="number" id="re-area" placeholder="예) 59">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">층수</label>
+            <input class="re-form-input" type="text" id="re-floor" placeholder="예) 15층">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">입주 가능일</label>
+            <input class="re-form-input" type="text" id="re-movein" placeholder="예) 협의 가능">
+          </div>
+        </div>
+      </div>
+
+      <div class="re-form-section">
+        <label class="re-form-label">🔗 부동산 링크 (네이버부동산 등)</label>
+        <input class="re-form-input" type="url" id="re-link" placeholder="https://...">
+      </div>
+
+      <div class="re-form-section">
+        <label class="re-form-label">📝 임장 메모 / 특이사항</label>
+        <textarea class="re-textarea" id="re-memo" placeholder="채광, 소음, 주차, 관리비, 주변 인프라 등&#10;임장 가서 느낀 점을 자유롭게 적어요"></textarea>
+      </div>
+
+      <div class="re-form-section">
+        <label class="re-form-label">📊 검토 상태</label>
+        <select class="re-form-input" id="re-status" style="cursor:pointer;">
+          <option value="검토중">🔄 검토중</option>
+          <option value="임장완료">✅ 임장완료</option>
+          <option value="재방문예정">📅 재방문예정</option>
+          <option value="관심없음">❌ 관심없음</option>
+          <option value="계약진행">🔑 계약진행</option>
+        </select>
+      </div>
+    </div>
+    <div class="re-modal-footer">
+      <button class="modal-cancel" onclick="closeReModal()">취소</button>
+      <button class="re-save-btn" onclick="saveReProperty()">저장하기 →</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1027,13 +1289,14 @@ let rowCounter = 9000;
 let itemCounter = 5000;
 
 // 투두 탭 키 목록 (이동 기능을 위해 순서 유지)
-const TODO_KEYS = ['d365','d300','d200','d100','d60','after'];
+const TODO_KEYS = ['d365','d300','d200','d100','d60','dday','after'];
 const TODO_LABELS = {
   d365:'D-365~300 기초공사',
   d300:'D-300~200 핵심계약',
   d200:'D-200~100 집·여행',
   d100:'D-100~60 마무리',
-  d60:'D-60~D-Day',
+  d60:'D-60~D-1 마지막 점검',
+  dday:'🎊 D-Day 당일',
   after:'결혼 후 처리'
 };
 
@@ -1064,7 +1327,7 @@ const defaultTodoData = {
     {text:'청첩장 제작 주문',done:false},
     {text:'상견례 진행',done:false},
   ]},
-  d60:{label:'D-60~D-Day',items:[
+  d60:{label:'D-60~D-1 마지막 점검',items:[
     {text:'D-60 청첩장 발송',done:false},
     {text:'하객 최종 리스트 확정',done:false},
     {text:'웨딩 촬영 진행',done:false},
@@ -1072,6 +1335,20 @@ const defaultTodoData = {
     {text:'사회자·축가자 최종 확인',done:false},
     {text:'현금봉투 준비 (헬퍼비·수모비 등)',done:false},
     {text:'전날 음주 금지 🙏🏻',done:false},
+  ]},
+  dday:{label:'🎊 D-Day 당일',items:[
+    {text:'신부 헤어·메이크업 예약시간 확인',done:false},
+    {text:'드레스·예복 준비물 챙기기',done:false},
+    {text:'부케 수령 확인',done:false},
+    {text:'혼주 한복 및 메이크업 시간 확인',done:false},
+    {text:'현장 헬퍼 배치 확인',done:false},
+    {text:'축가·사회자 최종 연락',done:false},
+    {text:'축의금 봉투·방명록 준비 확인',done:false},
+    {text:'웨딩홀 담당자 도착 확인',done:false},
+    {text:'스냅·영상 작가 도착 확인',done:false},
+    {text:'신부 대기실 꽃 장식 확인',done:false},
+    {text:'식순표·프로그램 최종 확인',done:false},
+    {text:'감사 인사 & 기념사진 촬영',done:false},
   ]},
   after:{label:'결혼 후 처리',items:[
     {text:'혼인신고 (주민센터 or 인터넷)',done:false},
@@ -1084,6 +1361,258 @@ const defaultTodoData = {
   ]}
 };
 let todoData = JSON.parse(JSON.stringify(defaultTodoData));
+
+// ═══════════════════════════════════════════════
+// 🏠 부동산 탭 데이터 & 함수
+// ═══════════════════════════════════════════════
+let reProperties = []; // 매물 배열
+let reEditId = null;
+let reActiveTypes = new Set(); // 모달에서 선택된 거래 유형
+let reFilter = 'all';
+
+const RE_STATUS_COLORS = {
+  '검토중': {bg:'rgba(139,159,201,0.15)',color:'#4a6da8'},
+  '임장완료': {bg:'rgba(122,171,138,0.15)',color:'#4a8a5e'},
+  '재방문예정': {bg:'rgba(201,169,110,0.15)',color:'#8a6a2e'},
+  '관심없음': {bg:'rgba(180,180,180,0.15)',color:'#999'},
+  '계약진행': {bg:'rgba(201,131,122,0.2)',color:'#a85e56'},
+};
+
+function renderReGrid() {
+  const grid = document.getElementById('re-grid');
+  const empty = document.getElementById('re-empty');
+  if (!grid) return;
+
+  // 예산 연동 업데이트
+  const tb = document.getElementById('re-total-budget');
+  const hb = document.getElementById('re-house-budget');
+  if (tb) tb.textContent = fmt(totalBudget) + ' 만원';
+  if (hb) {
+    const houseBudget = budgetTabs.find(t => t.id === 'b-house');
+    const houseAmt = houseBudget ? houseBudget.items.reduce((s,i)=>s+(i.val||0),0) : 0;
+    hb.textContent = fmt(houseAmt) + ' 만원';
+  }
+
+  // 필터링
+  let filtered = reProperties.filter(p => {
+    if (reFilter === 'all') return true;
+    if (reFilter === 'fav') return p.fav;
+    return p.types && p.types.includes(reFilter);
+  });
+
+  // 카운트 업데이트
+  const cd = document.getElementById('re-count-display');
+  const fc = document.getElementById('re-fav-count');
+  if (cd) cd.textContent = reProperties.length + '개';
+  if (fc) fc.textContent = reProperties.filter(p=>p.fav).length + '개';
+
+  // 기존 카드 제거 (re-empty 제외)
+  Array.from(grid.children).forEach(el => { if (el.id !== 're-empty') el.remove(); });
+
+  if (filtered.length === 0) {
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  filtered.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 're-card' + (p.fav ? ' re-fav' : '');
+    card.id = 'recard-' + p.id;
+
+    const typeBadges = (p.types||[]).map(t => {
+      const map = {monthly:'월세 rtb-monthly', jeonse:'전세 rtb-jeonse', buy:'매매 rtb-buy'};
+      const [label, cls] = (map[t]||'').split(' ');
+      return label ? `<span class="re-type-badge ${cls}">${label}</span>` : '';
+    }).join('');
+
+    const naverUrl = 'https://map.naver.com/v5/search/' + encodeURIComponent(p.location||p.name||'');
+    const kakaoUrl = 'https://map.kakao.com/?q=' + encodeURIComponent(p.location||p.name||'');
+
+    // 가격 카드 3개
+    const priceMonthly = (p.types||[]).includes('monthly')
+      ? `<div class="re-price-item"><div class="re-price-label">월세</div><div class="re-price-val">${p.monthlyDeposit ? fmt(p.monthlyDeposit)+'만' : '<span class="empty">-</span>'}</div><div class="re-price-deposit">${p.monthlyRent ? '월 '+fmt(p.monthlyRent)+'만원' : ''}</div></div>` : '';
+    const priceJeonse = (p.types||[]).includes('jeonse')
+      ? `<div class="re-price-item"><div class="re-price-label">전세</div><div class="re-price-val">${p.jeonsePrice ? fmt(p.jeonsePrice)+'만' : '<span class="empty">-</span>'}</div><div class="re-price-deposit"></div></div>` : '';
+    const priceBuy = (p.types||[]).includes('buy')
+      ? `<div class="re-price-item"><div class="re-price-label">매매</div><div class="re-price-val">${p.buyPrice ? fmt(p.buyPrice)+'만' : '<span class="empty">-</span>'}</div><div class="re-price-deposit"></div></div>` : '';
+    const priceEmpty = (!priceMonthly && !priceJeonse && !priceBuy)
+      ? `<div class="re-price-item"><div class="re-price-label">가격</div><div class="re-price-val empty">미입력</div></div>` : '';
+
+    const statusStyle = RE_STATUS_COLORS[p.status] || RE_STATUS_COLORS['검토중'];
+
+    card.innerHTML = `
+      <div class="re-card-top">
+        <div class="re-card-name-row">
+          <div class="re-card-name">${esc(p.name||'이름 없음')}</div>
+          <button class="re-fav-btn${p.fav?' on':''}" onclick="toggleReFav('${p.id}')" title="관심 매물">⭐</button>
+          <button class="re-del-btn-top" onclick="deleteReProperty('${p.id}')" title="삭제">×</button>
+        </div>
+        <div class="re-type-badges">${typeBadges||'<span style="font-size:11px;color:var(--text-l)">유형 미설정</span>'}</div>
+        <div class="re-location-row">
+          <span style="font-size:14px;">📍</span>
+          <span>${esc(p.location||'위치 미입력')}</span>
+          ${p.location ? `<a href="${naverUrl}" target="_blank">N지도</a><a href="${kakaoUrl}" target="_blank">K지도</a>` : ''}
+        </div>
+      </div>
+      <div class="re-card-body">
+        <div class="re-price-grid" style="grid-template-columns:repeat(${[priceMonthly,priceJeonse,priceBuy].filter(Boolean).length||1},1fr);">
+          ${priceMonthly}${priceJeonse}${priceBuy}${priceEmpty}
+        </div>
+        <div class="re-meta-row">
+          ${p.area ? `<span class="re-meta-item">📐 <span class="val">${p.area}㎡</span></span>` : ''}
+          ${p.floor ? `<span class="re-meta-item">🏢 <span class="val">${esc(p.floor)}</span></span>` : ''}
+          ${p.movein ? `<span class="re-meta-item">📅 <span class="val">${esc(p.movein)}</span></span>` : ''}
+        </div>
+        ${p.link ? `<div class="re-link-row"><a href="${esc(p.link)}" target="_blank">🔗 ${esc(p.link)}</a></div>` : ''}
+        ${p.memo ? `<div class="re-memo-box">${esc(p.memo)}</div>` : ''}
+      </div>
+      <div class="re-card-footer">
+        <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;background:${statusStyle.bg};color:${statusStyle.color};">${p.status||'검토중'}</span>
+        <button class="re-edit-btn" onclick="editReProperty('${p.id}')">✏️ 수정</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function reFilterBy(type, btn) {
+  reFilter = type;
+  document.querySelectorAll('.re-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReGrid();
+}
+
+function openReModal(editId) {
+  reEditId = editId || null;
+  reActiveTypes = new Set();
+  // 폼 초기화
+  ['re-name','re-location','re-monthly-deposit','re-monthly-rent','re-jeonse-price','re-buy-price','re-area','re-floor','re-movein','re-link','re-memo'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('re-status').value = '검토중';
+  ['monthly','jeonse','buy'].forEach(t => {
+    const btn = document.getElementById('rtt-'+t);
+    if (btn) { btn.className = 're-type-toggle'; }
+    const sec = document.getElementById('re-'+t+'-section');
+    if (sec) sec.style.display = 'none';
+  });
+  document.getElementById('re-modal-title').textContent = editId ? '🏠 매물 수정' : '🏠 매물 등록';
+
+  if (editId) {
+    const p = reProperties.find(r => r.id === editId);
+    if (p) {
+      document.getElementById('re-name').value = p.name||'';
+      document.getElementById('re-location').value = p.location||'';
+      document.getElementById('re-area').value = p.area||'';
+      document.getElementById('re-floor').value = p.floor||'';
+      document.getElementById('re-movein').value = p.movein||'';
+      document.getElementById('re-link').value = p.link||'';
+      document.getElementById('re-memo').value = p.memo||'';
+      document.getElementById('re-status').value = p.status||'검토중';
+      (p.types||[]).forEach(t => {
+        reActiveTypes.add(t);
+        const btn = document.getElementById('rtt-'+t);
+        if (btn) btn.className = 're-type-toggle on-'+t;
+        const sec = document.getElementById('re-'+t+'-section');
+        if (sec) sec.style.display = 'block';
+      });
+      if (p.monthlyDeposit) document.getElementById('re-monthly-deposit').value = p.monthlyDeposit;
+      if (p.monthlyRent)    document.getElementById('re-monthly-rent').value = p.monthlyRent;
+      if (p.jeonsePrice)    document.getElementById('re-jeonse-price').value = p.jeonsePrice;
+      if (p.buyPrice)       document.getElementById('re-buy-price').value = p.buyPrice;
+    }
+  }
+  document.getElementById('re-modal-overlay').classList.add('open');
+}
+
+function closeReModal() {
+  document.getElementById('re-modal-overlay').classList.remove('open');
+}
+
+function toggleReType(type, btn) {
+  if (reActiveTypes.has(type)) {
+    reActiveTypes.delete(type);
+    btn.className = 're-type-toggle';
+    const sec = document.getElementById('re-'+type+'-section');
+    if (sec) sec.style.display = 'none';
+  } else {
+    reActiveTypes.add(type);
+    btn.className = 're-type-toggle on-'+type;
+    const sec = document.getElementById('re-'+type+'-section');
+    if (sec) sec.style.display = 'block';
+  }
+}
+
+function saveReProperty() {
+  const name = document.getElementById('re-name').value.trim();
+  if (!name) { showToast('부동산명을 입력해주세요'); return; }
+  const prop = {
+    id: reEditId || ('re' + Date.now()),
+    name,
+    location: document.getElementById('re-location').value.trim(),
+    types: Array.from(reActiveTypes),
+    monthlyDeposit: parseFloat(document.getElementById('re-monthly-deposit').value)||0,
+    monthlyRent: parseFloat(document.getElementById('re-monthly-rent').value)||0,
+    jeonsePrice: parseFloat(document.getElementById('re-jeonse-price').value)||0,
+    buyPrice: parseFloat(document.getElementById('re-buy-price').value)||0,
+    area: parseFloat(document.getElementById('re-area').value)||0,
+    floor: document.getElementById('re-floor').value.trim(),
+    movein: document.getElementById('re-movein').value.trim(),
+    link: document.getElementById('re-link').value.trim(),
+    memo: document.getElementById('re-memo').value.trim(),
+    status: document.getElementById('re-status').value,
+    fav: reEditId ? (reProperties.find(r=>r.id===reEditId)?.fav || false) : false,
+    addedAt: reEditId ? (reProperties.find(r=>r.id===reEditId)?.addedAt || new Date().toISOString()) : new Date().toISOString(),
+  };
+  if (reEditId) {
+    const idx = reProperties.findIndex(r => r.id === reEditId);
+    if (idx >= 0) reProperties[idx] = prop;
+  } else {
+    reProperties.push(prop);
+  }
+  closeReModal();
+  renderReGrid();
+  showToast(reEditId ? '✅ 매물 정보가 수정됐어요!' : '🏠 매물이 등록됐어요!');
+  saveAll();
+}
+
+function editReProperty(id) { openReModal(id); }
+
+function deleteReProperty(id) {
+  if (!confirm('이 매물을 삭제할까요?')) return;
+  reProperties = reProperties.filter(p => p.id !== id);
+  renderReGrid();
+  showToast('삭제됐어요');
+  saveAll();
+}
+
+function toggleReFav(id) {
+  const p = reProperties.find(r => r.id === id);
+  if (p) { p.fav = !p.fav; renderReGrid(); saveAll(); }
+}
+
+function openMapSearch() {
+  const loc = document.getElementById('re-location').value.trim() || document.getElementById('re-name').value.trim();
+  if (!loc) { showToast('주소를 먼저 입력해주세요'); return; }
+  window.open('https://map.naver.com/v5/search/' + encodeURIComponent(loc), '_blank');
+}
+
+function openNaverMap() {
+  const loc = document.getElementById('re-location').value.trim() || document.getElementById('re-name').value.trim();
+  window.open('https://map.naver.com/v5/search/' + encodeURIComponent(loc||'서울'), '_blank');
+}
+
+function openKakaoMap() {
+  const loc = document.getElementById('re-location').value.trim() || document.getElementById('re-name').value.trim();
+  window.open('https://map.kakao.com/?q=' + encodeURIComponent(loc||'서울'), '_blank');
+}
+
+// 모달 오버레이 외부 클릭 닫기
+document.addEventListener('DOMContentLoaded', () => {
+  const overlay = document.getElementById('re-modal-overlay');
+  if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) closeReModal(); });
+});
+
 
 // ── 초기화 ──
 function init() {
@@ -1113,6 +1642,7 @@ function switchMain(id) {
   currentMainTab = id;
   updateMemoDisplay();
   if (id === 'tab-summary') { updateSummary(); renderGuidelineCards(); }
+  if (id === 'tab-realestate') { renderReGrid(); }
 }
 
 // ── 지출 내역 렌더 (윤석/혜원 컬럼 없음) ──
@@ -1418,7 +1948,10 @@ function updateLimitStatusBar(tabId) {
   if (!tab) return;
   const usedAmt = tab.items.reduce((s,it)=>s+(it.val||0), 0);
   const limitPct = tab.limitPct || 0;
-  const limitAmt = totalBudget > 0 ? Math.round(totalBudget * limitPct / 100) : 0;
+  // limitAmt: 직접입력 우선, 없으면 비중 계산
+  const limitAmt = (tab.limitAmt > 0)
+    ? tab.limitAmt
+    : (totalBudget > 0 ? Math.round(totalBudget * limitPct / 100) : 0);
 
   if (limitPct === 0 || limitAmt === 0) {
     bar.className = 'limit-status-bar lsb-unset';
@@ -1482,18 +2015,22 @@ function syncLimitFromCard(tabId, val) {
   const tab = budgetTabs.find(t=>t.id===tabId);
   if (!tab) return;
   tab.limitPct = parseFloat(val) || 0;
+  // 비중 입력 시, 금액 직접입력 초기화 (비중 우선)
+  if (tab.limitPct > 0) tab.limitAmt = 0;
   const inp = document.getElementById('limit-'+tabId);
   if (inp) inp.value = tab.limitPct;
   const guideEl = document.getElementById('limit-guide-'+tabId);
   if (guideEl && totalBudget > 0) {
     guideEl.textContent = '= '+fmt(Math.round(totalBudget * tab.limitPct / 100))+' 만원';
   }
-  const i = budgetTabs.indexOf(tab);
-  const color = TAB_COLORS[i % TAB_COLORS.length];
-  const limitAmt = totalBudget > 0 ? Math.round(totalBudget * tab.limitPct / 100) : 0;
+  const amtInpEl = document.getElementById('gl-amtinput-'+tabId);
+  if (amtInpEl && tab.limitAmt === 0) amtInpEl.value = '';
+  const limitAmt = tab.limitAmt > 0 ? tab.limitAmt : (totalBudget > 0 ? Math.round(totalBudget * tab.limitPct / 100) : 0);
   const usedAmt = tab.items.reduce((s,it)=>s+(it.val||0), 0);
   const usedPct = limitAmt > 0 ? Math.min(usedAmt / limitAmt * 100, 100) : 0;
   const over = limitAmt > 0 && usedAmt > limitAmt;
+  const i = budgetTabs.indexOf(tab);
+  const color = TAB_COLORS[i % TAB_COLORS.length];
   const amtEl = document.getElementById('gl-amt-'+tabId);
   if (amtEl) amtEl.textContent = limitAmt > 0 ? fmt(limitAmt)+' 만원' : '—';
   const barEl = document.getElementById('gl-bar-'+tabId);
@@ -1501,7 +2038,7 @@ function syncLimitFromCard(tabId, val) {
   const statusEl = document.getElementById('gl-status-'+tabId);
   if (statusEl) {
     let txt, cls;
-    if (tab.limitPct===0){txt='미설정';cls='gl-empty';}
+    if (limitAmt===0){txt='미설정';cls='gl-empty';}
     else if (over){txt='초과 ⚠️';cls='gl-over';}
     else if (usedPct>80){txt='주의';cls='gl-warn';}
     else {txt='정상 ✓';cls='gl-ok';}
@@ -1512,6 +2049,45 @@ function syncLimitFromCard(tabId, val) {
   const disp = document.getElementById('pct-sum-display');
   if (badge) { badge.textContent='합계 '+pctSum+'%'; badge.className='badge '+(pctSum>100?'badge-warn':'badge-ok'); }
   if (disp) { disp.textContent=pctSum+'%'; disp.className='ptv'+(pctSum>100?' over':''); }
+  updateLimitStatusBar(tabId);
+}
+
+// 금액 직접 입력 → 비중% 역산 또는 독립 상한 설정
+function syncLimitAmtFromCard(tabId, val) {
+  const tab = budgetTabs.find(t=>t.id===tabId);
+  if (!tab) return;
+  const amt = parseFloat(val) || 0;
+  tab.limitAmt = amt;
+  // 역산: 총예산이 있으면 비중도 함께 표시 (참고용)
+  if (amt > 0 && totalBudget > 0) {
+    tab.limitPct = Math.round(amt / totalBudget * 100);
+    const pctInp = document.querySelector(`#guideline-cards .gl-pct-input[oninput*="${tabId}"]`);
+    if (pctInp) pctInp.value = tab.limitPct;
+    const inp = document.getElementById('limit-'+tabId);
+    if (inp) inp.value = tab.limitPct;
+  } else if (amt === 0) {
+    tab.limitAmt = 0;
+  }
+  const limitAmt = amt > 0 ? amt : (totalBudget > 0 ? Math.round(totalBudget * (tab.limitPct||0) / 100) : 0);
+  const usedAmt = tab.items.reduce((s,it)=>s+(it.val||0), 0);
+  const usedPct = limitAmt > 0 ? Math.min(usedAmt / limitAmt * 100, 100) : 0;
+  const over = limitAmt > 0 && usedAmt > limitAmt;
+  const i = budgetTabs.indexOf(tab);
+  const color = TAB_COLORS[i % TAB_COLORS.length];
+  const amtEl = document.getElementById('gl-amt-'+tabId);
+  if (amtEl) amtEl.textContent = limitAmt > 0 ? fmt(limitAmt)+' 만원' : '—';
+  const barEl = document.getElementById('gl-bar-'+tabId);
+  if (barEl) { barEl.style.width = usedPct+'%'; barEl.style.background = over ? 'var(--rose)' : color; }
+  const statusEl = document.getElementById('gl-status-'+tabId);
+  if (statusEl) {
+    let txt, cls;
+    if (limitAmt===0){txt='미설정';cls='gl-empty';}
+    else if (over){txt='초과 ⚠️';cls='gl-over';}
+    else if (usedPct>80){txt='주의';cls='gl-warn';}
+    else {txt='정상 ✓';cls='gl-ok';}
+    statusEl.textContent = txt; statusEl.className = 'gl-status '+cls;
+  }
+  updateLimitStatusBar(tabId);
 }
 
 function renderGuidelineCards() {
@@ -1522,13 +2098,16 @@ function renderGuidelineCards() {
   budgetTabs.forEach((tab,i) => {
     const color = TAB_COLORS[i % TAB_COLORS.length];
     const limitPct = tab.limitPct||0;
-    const limitAmt = totalBudget>0 ? Math.round(totalBudget*limitPct/100) : 0;
+    // limitAmt: 직접 입력값 우선, 없으면 비중 계산
+    const limitAmt = tab.limitAmt > 0
+      ? tab.limitAmt
+      : (totalBudget>0 ? Math.round(totalBudget*limitPct/100) : 0);
     const usedAmt = tab.items.reduce((s,it)=>s+(it.val||0),0);
     const usedPct = limitAmt>0 ? Math.min(usedAmt/limitAmt*100,100) : 0;
     const over = limitAmt>0 && usedAmt>limitAmt;
     pctSum += limitPct;
     let statusText, statusClass;
-    if (limitPct===0){statusText='미설정';statusClass='gl-empty';}
+    if (limitAmt===0){statusText='미설정';statusClass='gl-empty';}
     else if (over){statusText='초과 ⚠️';statusClass='gl-over';}
     else if (usedPct>80){statusText='주의';statusClass='gl-warn';}
     else {statusText='정상 ✓';statusClass='gl-ok';}
@@ -1541,7 +2120,16 @@ function renderGuidelineCards() {
         <input class="gl-pct-input" type="number" value="${limitPct}" min="0" max="100"
           oninput="syncLimitFromCard('${tab.id}',this.value)"
           onblur="syncLimitFromCard('${tab.id}',this.value)">
-        <span class="gl-pct-label">% 상한</span>
+        <span class="gl-pct-label">% 비중</span>
+      </div>
+      <div class="gl-or-divider">── 또는 금액 직접 입력 ──</div>
+      <div class="gl-amt-row">
+        <input class="gl-amt-input" type="number" id="gl-amtinput-${tab.id}"
+          value="${tab.limitAmt > 0 ? tab.limitAmt : ''}"
+          placeholder="상한 금액"
+          oninput="syncLimitAmtFromCard('${tab.id}',this.value)"
+          onblur="syncLimitAmtFromCard('${tab.id}',this.value)">
+        <span class="gl-amt-label">만원 상한</span>
       </div>
       <div class="gl-amount" style="color:${color}" id="gl-amt-${tab.id}">${limitAmt>0?fmt(limitAmt)+' 만원':'—'}</div>
       <div class="gl-used">실제 입력: <b>${fmt(usedAmt)} 만원</b>${limitAmt>0?' / '+usedPct.toFixed(0)+'% 사용':''}</div>
@@ -1801,12 +2389,19 @@ function renderTodoItem(key, item) {
   const list = document.getElementById('tlist-' + key);
   const div = document.createElement('div');
   div.className = 'todo-item' + (item.done?' done':'');
+  div.draggable = true;
+  // 드래그 이벤트
+  div.addEventListener('dragstart', handleTodoDragStart);
+  div.addEventListener('dragend',   handleTodoDragEnd);
+  div.addEventListener('dragover',  handleTodoDragOver);
+  div.addEventListener('drop',      handleTodoDrop);
   // 이동 메뉴: data속성으로 onclick 따옴표 충돌 방지
   const menuItems = '<div class="move-menu-title">탭 이동</div>' + TODO_KEYS.map(k => {
     const isCurrent = k === key;
     return `<div class="move-menu-item${isCurrent?' current':''}" data-from="${key}" data-to="${k}" onclick="handleMoveClick(this)"><span class="mmi-dot"></span>${isCurrent?'✓ 현재':''}${TODO_LABELS[k]}</div>`;
   }).join('');
   div.innerHTML = `
+    <span class="todo-drag-handle" title="드래그하여 순서 변경">⠿</span>
     <div class="todo-check" onclick="toggleTodo(this)">
       <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
         <path d="M1 3.5L3 5.5L8 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1827,6 +2422,44 @@ function handleMoveClick(el) {
   const fromKey = el.dataset.from;
   const toKey = el.dataset.to;
   moveTodoItem(el, fromKey, toKey);
+}
+
+// ── 드래그 정렬 ──
+let _dragTodoEl = null;
+
+function handleTodoDragStart(e) {
+  _dragTodoEl = this;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleTodoDragEnd(e) {
+  this.classList.remove('dragging');
+  document.querySelectorAll('.todo-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+  _dragTodoEl = null;
+}
+
+function handleTodoDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if (!_dragTodoEl || _dragTodoEl === this) return;
+  document.querySelectorAll('.todo-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+  this.classList.add('drag-over');
+}
+
+function handleTodoDrop(e) {
+  e.preventDefault();
+  if (!_dragTodoEl || _dragTodoEl === this) return;
+  this.classList.remove('drag-over');
+  const list = this.parentNode;
+  const items = Array.from(list.querySelectorAll('.todo-item'));
+  const fromIdx = items.indexOf(_dragTodoEl);
+  const toIdx   = items.indexOf(this);
+  if (fromIdx < toIdx) {
+    list.insertBefore(_dragTodoEl, this.nextSibling);
+  } else {
+    list.insertBefore(_dragTodoEl, this);
+  }
 }
 
 // 인라인 편집: 더블클릭 시 input으로 전환
@@ -2202,11 +2835,12 @@ function buildSaveData() {
     guests: document.getElementById('guests')?.value,
     giftPer: document.getElementById('gift-per')?.value,
     expenseSections: JSON.parse(JSON.stringify(expenseSections)),
-    budgetTabs: JSON.parse(JSON.stringify(budgetTabs)),
+    budgetTabs: JSON.parse(JSON.stringify(budgetTabs)),  // limitAmt 포함
     activeBudgetTab,
     todoState: collectTodoState(),
     memos: JSON.parse(JSON.stringify(memos)),
     requests: JSON.parse(JSON.stringify(requests)),
+    reProperties: JSON.parse(JSON.stringify(reProperties)),
     savedAt: new Date().toLocaleString('ko-KR')
   };
 }
@@ -2227,7 +2861,10 @@ function applyLoadedData(data) {
   renderBudgetTabs();
   if (data.todoState) {
     TODO_KEYS.forEach(key => {
-      if (data.todoState[key]) todoData[key] = { label: TODO_LABELS[key], items: data.todoState[key] };
+      if (data.todoState[key]) {
+        todoData[key] = { label: TODO_LABELS[key], items: data.todoState[key] };
+      }
+      // dday 탭이 없는 구 버전 데이터라면 기본값 유지
     });
   }
   renderTodo();
@@ -2241,6 +2878,10 @@ function applyLoadedData(data) {
   if (data.requests && Array.isArray(data.requests)) {
     requests = data.requests;
     renderAllRequests();
+  }
+  if (data.reProperties && Array.isArray(data.reProperties)) {
+    reProperties = data.reProperties;
+    renderReGrid();
   }
   if (data.savedAt) updateLastSaved(data.savedAt);
 }
@@ -2427,11 +3068,14 @@ function handleMemoPlacement(e) {
   memoPlacementMode = false;
   const ov = document.getElementById('memo-placement-overlay');
   if(ov) ov.style.display = 'none';
-  const x = (e.clientX / window.innerWidth * 100).toFixed(1);
-  const y = (e.clientY / window.innerHeight * 100).toFixed(1);
+  // 페이지 기준 절대 좌표 (스크롤 포함)
+  const container = document.getElementById('memo-container');
+  const cRect = container.getBoundingClientRect();
+  const x = (e.clientX - cRect.left + container.scrollLeft);
+  const y = (e.clientY - cRect.top  + window.scrollY);
   document.getElementById('memo-form-id').value = '';
-  document.getElementById('memo-form-x').value = x;
-  document.getElementById('memo-form-y').value = y;
+  document.getElementById('memo-form-x').value = x.toFixed(1);
+  document.getElementById('memo-form-y').value = y.toFixed(1);
   document.getElementById('memo-form-title').value = '';
   document.getElementById('memo-form-content').value = '';
   document.getElementById('memo-form-link').value = '';
@@ -2483,8 +3127,9 @@ function renderMemoEl(memo) {
   const div = document.createElement('div');
   div.className = 'sticky-memo';
   div.id = 'sticky-' + memo.id;
-  div.style.left = memo.x + '%';
-  div.style.top = memo.y + '%';
+  // px 좌표 (절대위치, 컨테이너 기준)
+  div.style.left = (memo.x || 0) + 'px';
+  div.style.top  = (memo.y || 0) + 'px';
   div.style.background = memo.color || '#fff9c4';
   // 탭 배지 표시
   const tabLabels = {
@@ -2514,7 +3159,10 @@ function renderMemoEl(memo) {
   if(memoVisibility === 'all') show = true;
   else if(memoVisibility === 'current') show = (memo.tabId === currentMainTab || !memo.tabId);
   div.style.display = show ? 'block' : 'none';
-  document.body.appendChild(div);
+  // memo-container에 붙임 (스크롤 따라가지 않도록 absolute)
+  const container = document.getElementById('memo-container');
+  if(container) container.appendChild(div);
+  else document.body.appendChild(div); // 폴백
 }
 
 function editMemoById(id) {
@@ -2563,8 +3211,12 @@ function startDragMemo(e, id) {
 
 function _onDragMemo(e) {
   if(!_dragMemo) return;
-  _dragMemo.el.style.left = ((e.clientX - _dragOffX) / window.innerWidth * 100).toFixed(1) + '%';
-  _dragMemo.el.style.top  = ((e.clientY - _dragOffY) / window.innerHeight * 100).toFixed(1) + '%';
+  const container = document.getElementById('memo-container');
+  const cRect = container ? container.getBoundingClientRect() : {left:0, top:0};
+  const newX = e.clientX - cRect.left - _dragOffX;
+  const newY = e.clientY - cRect.top  - _dragOffY + window.scrollY;
+  _dragMemo.el.style.left = Math.max(0, newX) + 'px';
+  _dragMemo.el.style.top  = Math.max(0, newY) + 'px';
 }
 
 function _stopDragMemo() {
