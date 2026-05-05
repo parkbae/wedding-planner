@@ -371,17 +371,17 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   display:flex;align-items:center;justify-content:center;gap:6px;}
 .fab-save-btn:hover{background:var(--navy-l);}
 /* 액션 행 */
-.fab-action-row{display:flex;border-top:1px solid var(--border);}
+.fab-action-row{display:flex;border-top:1px solid var(--border);align-items:stretch;}
 .fab-action-btn{flex:1;background:none;border:none;cursor:pointer;
-  padding:10px 6px 8px;font-size:11px;color:var(--text-l);
+  padding:10px 8px 8px;font-size:11px;color:var(--text-l);
   font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;}
 .fab-action-btn:hover{background:var(--blush);color:var(--navy);}
 .fab-action-btn:not(:last-child){border-right:1px solid var(--border);}
 .fab-action-icon{font-size:15px;line-height:1;}
-.fab-action-label{font-size:10px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52px;text-align:center;}
+.fab-action-label{font-size:10px;font-weight:500;white-space:nowrap;text-align:center;display:block;}
 /* 메모 드롭다운 */
-.fab-memo-group{position:relative;}
+.fab-memo-group{position:relative;flex:1;display:flex;flex-direction:column;}
 .fab-memo-dropdown{display:none;position:absolute;bottom:100%;right:0;
   background:white;border:1px solid var(--border);border-radius:10px;
   box-shadow:0 4px 16px rgba(44,49,73,0.14);min-width:200px;

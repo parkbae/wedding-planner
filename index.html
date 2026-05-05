@@ -58,8 +58,8 @@
         <span class="fab-action-label">메모 추가</span>
       </button>
 
-      <!-- 초기화 -->
-      <button class="fab-action-btn" onclick="resetAll()" title="데이터 초기화">
+      <!-- 초기화 (숨김 처리 — resetAll 함수는 유지) -->
+      <button class="fab-action-btn" onclick="resetAll()" title="데이터 초기화" style="display:none">
         <span class="fab-action-icon">🗑</span>
         <span class="fab-action-label">초기화</span>
       </button>
@@ -267,8 +267,8 @@
     <button class="main-tab" data-panel="tab-expense" onclick="switchMain('tab-expense')">📋 지출 내역</button>
     <button class="main-tab" data-panel="tab-budget" onclick="switchMain('tab-budget')">💰 예산 플래너</button>
     <button class="main-tab" data-panel="tab-todo" onclick="switchMain('tab-todo')">✅ 투두리스트</button>
-    <button class="main-tab" data-panel="tab-request" onclick="switchMain('tab-request')" id="tab-btn-request">💬 요청함</button>
     <button class="main-tab" data-panel="tab-realestate" onclick="switchMain('tab-realestate')" id="tab-btn-realestate">🏠 부동산</button>
+    <button class="main-tab" data-panel="tab-request" onclick="switchMain('tab-request')" id="tab-btn-request">💬 요청함</button>
   </div>
 
   <div class="budget-setup">
