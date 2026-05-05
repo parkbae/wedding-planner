@@ -1766,16 +1766,20 @@ let currentMainTab = 'tab-summary'; // 현재 활성 탭 추적
 // 메모 가시성 상태: 'all' | 'current' | 'hidden'
 let memoVisibility = 'hidden';
 
-// ── FAB 메모 드롭다운 토글 ──
-function toggleMemoDropdown() {
-  const dd = document.getElementById('fab-memo-dropdown');
+
+// ── FAB 메모 숨기기 드롭다운 토글 ──
+function toggleHideDropdown() {
+  var dd = document.getElementById('fab-hide-dropdown');
+  var other = document.getElementById('fab-show-dropdown');
   if(!dd) return;
-  const isOpen = dd.classList.contains('open');
+  var isOpen = dd.classList.contains('open');
+  if(other) other.classList.remove('open');
   dd.classList.toggle('open', !isOpen);
   if(!isOpen) {
-    setTimeout(() => {
+    setTimeout(function() {
       document.addEventListener('click', function handler(e) {
-        if(!dd.contains(e.target) && !document.getElementById('fab-memo-btn').contains(e.target)) {
+        var btn = document.getElementById('fab-hide-btn');
+        if(!dd.contains(e.target) && !(btn && btn.contains(e.target))) {
           dd.classList.remove('open');
           document.removeEventListener('click', handler);
         }
@@ -1784,10 +1788,34 @@ function toggleMemoDropdown() {
   }
 }
 
+// ── FAB 메모 표기 드롭다운 토글 ──
+function toggleShowDropdown() {
+  var dd = document.getElementById('fab-show-dropdown');
+  var other = document.getElementById('fab-hide-dropdown');
+  if(!dd) return;
+  var isOpen = dd.classList.contains('open');
+  if(other) other.classList.remove('open');
+  dd.classList.toggle('open', !isOpen);
+  if(!isOpen) {
+    setTimeout(function() {
+      document.addEventListener('click', function handler(e) {
+        var btn = document.getElementById('fab-show-btn');
+        if(!dd.contains(e.target) && !(btn && btn.contains(e.target))) {
+          dd.classList.remove('open');
+          document.removeEventListener('click', handler);
+        }
+      });
+    }, 10);
+  }
+}
+
+
 // ── 메모 가시성 설정 ──
 function setMemoVisibility(mode) {
-  const dd = document.getElementById('fab-memo-dropdown');
-  if(dd) dd.classList.remove('open');
+  var ddHide = document.getElementById('fab-hide-dropdown');
+  var ddShow = document.getElementById('fab-show-dropdown');
+  if(ddHide) ddHide.classList.remove('open');
+  if(ddShow) ddShow.classList.remove('open');
 
   if(mode === 'all') {
     memoVisibility = 'all';
@@ -1847,11 +1875,6 @@ function addMemoFromFab() {
 }
 
 function startMemoPlacement() {
-  if(memoVisibility === 'hidden') {
-    memoVisibility = 'current';
-    updateMemoDisplay();
-    updateFabMemoLabel();
-  }
   memoPlacementMode = true;
   const ov = document.getElementById('memo-placement-overlay');
   if(ov) ov.style.display = 'block';
