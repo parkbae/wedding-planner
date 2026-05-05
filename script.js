@@ -436,6 +436,7 @@ function switchMain(id) {
   currentMainTab = id;
   updateMemoDisplay();
   if (id === 'tab-summary') { updateSummary(); renderGuidelineCards(); }
+  if (id === 'tab-guests') { renderGuests(); }
   if (id === 'tab-vendors') { renderVendors(); }
   if (id === 'tab-realestate') { renderReGrid(); }
 }
@@ -1822,6 +1823,7 @@ function buildSaveData() {
     requests: JSON.parse(JSON.stringify(requests)),
     reProperties: JSON.parse(JSON.stringify(reProperties)),
     vendors: JSON.parse(JSON.stringify(vendors)),
+    guestState: JSON.parse(JSON.stringify(guestState)),
     savedAt: new Date().toLocaleString('ko-KR')
   };
 }
@@ -1867,6 +1869,12 @@ function applyLoadedData(data) {
   if (data.vendors && Array.isArray(data.vendors)) {
     vendors = data.vendors;
     renderVendors();
+  }
+  if (data.guestState) {
+    if (Array.isArray(data.guestState.namedGuests)) guestState.namedGuests = data.guestState.namedGuests;
+    if (Array.isArray(data.guestState.bulkCounts))  guestState.bulkCounts  = data.guestState.bulkCounts;
+    renderGuests();
+    syncGuestCountToSummary();
   }
   if (data.savedAt) updateLastSaved(data.savedAt);
 }
@@ -2798,4 +2806,246 @@ function renderVendors() {
     '</tr></thead>' +
     '<tbody>' + rows + '</tbody>' +
   '</table>';
+}
+
+// ═══════════════════════════════════════════════
+// 👥 하객관리 탭 (tab-guests) — V1
+// ═══════════════════════════════════════════════
+var guestState = {
+  namedGuests: [],
+  bulkCounts:  []
+};
+var guestIdCounter = 7000;
+
+var GS_GROUP_LABEL = {
+  family: '👨‍👩‍👧 가족',
+  friend: '🤝 친구',
+  work:   '💼 직장',
+  other:  '📌 기타'
+};
+var GS_SIDE_LABEL = { groom: '신랑측', bride: '신부측' };
+var GS_RSVP_LABEL = { undecided: '미정', attending: '참석', declined: '불참' };
+
+function gsGenId() {
+  guestIdCounter++;
+  return 'gs-' + guestIdCounter;
+}
+
+// ── 폼 토글 ──
+function toggleGuestForm(type) {
+  var wrapId = type === 'named' ? 'gs-named-form-wrap' : 'gs-bulk-form-wrap';
+  var btnId  = type === 'named' ? 'gs-named-toggle-btn' : 'gs-bulk-toggle-btn';
+  var wrap = document.getElementById(wrapId);
+  var btn  = document.getElementById(btnId);
+  if (!wrap) return;
+  var isOpen = wrap.style.display !== 'none';
+  wrap.style.display = isOpen ? 'none' : 'block';
+  if (btn) btn.textContent = isOpen ? '폼 펼치기 ▾' : '폼 접기 ▴';
+}
+
+// ── 직접 입력 하객 추가 ──
+function addNamedGuest() {
+  var name = (document.getElementById('gs-named-name').value || '').trim();
+  if (!name) { showToast('이름을 입력해주세요'); return; }
+  var sideEls = document.getElementsByName('gs-named-side');
+  var side = 'groom';
+  for (var i = 0; i < sideEls.length; i++) { if (sideEls[i].checked) { side = sideEls[i].value; break; } }
+  var guest = {
+    id:         gsGenId(),
+    side:       side,
+    group:      document.getElementById('gs-named-group').value || 'other',
+    name:       name,
+    inviteSent: false,
+    rsvp:       'undecided',
+    memo:       (document.getElementById('gs-named-memo').value || '').trim()
+  };
+  guestState.namedGuests.push(guest);
+  document.getElementById('gs-named-name').value = '';
+  document.getElementById('gs-named-memo').value = '';
+  renderGuests();
+  syncGuestCountToSummary();
+  saveAll();
+  showToast('👤 하객이 추가됐어요!');
+}
+
+// ── 숫자 입력 하객 추가 ──
+function addBulkGuest() {
+  var label = (document.getElementById('gs-bulk-label').value || '').trim();
+  var countVal = parseInt(document.getElementById('gs-bulk-count').value, 10);
+  if (!label) { showToast('라벨을 입력해주세요'); return; }
+  if (!countVal || countVal < 1) { showToast('인원 수를 1명 이상 입력해주세요'); return; }
+  var sideEls = document.getElementsByName('gs-bulk-side');
+  var side = 'groom';
+  for (var i = 0; i < sideEls.length; i++) { if (sideEls[i].checked) { side = sideEls[i].value; break; } }
+  var bulk = {
+    id:    gsGenId(),
+    side:  side,
+    label: label,
+    count: countVal,
+    memo:  (document.getElementById('gs-bulk-memo').value || '').trim()
+  };
+  guestState.bulkCounts.push(bulk);
+  document.getElementById('gs-bulk-label').value = '';
+  document.getElementById('gs-bulk-count').value = '';
+  document.getElementById('gs-bulk-memo').value  = '';
+  renderGuests();
+  syncGuestCountToSummary();
+  saveAll();
+  showToast('🔢 하객 그룹이 추가됐어요!');
+}
+
+// ── 청첩장 전달 토글 ──
+function toggleInviteSent(id) {
+  var g = guestState.namedGuests.find(function(x){ return x.id === id; });
+  if (!g) return;
+  g.inviteSent = !g.inviteSent;
+  renderGuests();
+  syncGuestCountToSummary();
+  saveAll();
+}
+
+// ── RSVP 변경 ──
+function changeRsvp(id, val) {
+  var g = guestState.namedGuests.find(function(x){ return x.id === id; });
+  if (!g) return;
+  g.rsvp = val;
+  // select 클래스 갱신
+  var sel = document.getElementById('gs-rsvp-' + id);
+  if (sel) {
+    sel.className = 'gs-rsvp-select gs-rsvp-' + val;
+  }
+  syncGuestCountToSummary();
+  saveAll();
+}
+
+// ── 직접 입력 하객 삭제 ──
+function deleteNamedGuest(id) {
+  if (!confirm('이 하객을 삭제할까요?')) return;
+  guestState.namedGuests = guestState.namedGuests.filter(function(x){ return x.id !== id; });
+  renderGuests();
+  syncGuestCountToSummary();
+  saveAll();
+  showToast('삭제됐어요');
+}
+
+// ── 숫자 입력 하객 삭제 ──
+function deleteBulkGuest(id) {
+  if (!confirm('이 항목을 삭제할까요?')) return;
+  guestState.bulkCounts = guestState.bulkCounts.filter(function(x){ return x.id !== id; });
+  renderGuests();
+  syncGuestCountToSummary();
+  saveAll();
+  showToast('삭제됐어요');
+}
+
+// ── 요약 탭 #guests 연동 ──
+function syncGuestCountToSummary() {
+  if (guestState.namedGuests.length === 0 && guestState.bulkCounts.length === 0) return;
+  var namedCount = guestState.namedGuests.filter(function(g){ return g.rsvp !== 'declined'; }).length;
+  var bulkCount  = guestState.bulkCounts.reduce(function(s, b){ return s + (b.count || 0); }, 0);
+  var total = namedCount + bulkCount;
+  var el = document.getElementById('guests');
+  if (el) { el.value = total; }
+  if (typeof calcNet === 'function') calcNet();
+}
+
+// ── 렌더 (직접 입력 + 숫자 입력) ──
+function renderGuests() {
+  // 요약 카드 업데이트
+  var namedActive = guestState.namedGuests.filter(function(g){ return g.rsvp !== 'declined'; });
+  var bulkTotal   = guestState.bulkCounts.reduce(function(s, b){ return s + (b.count || 0); }, 0);
+  var totalEst    = namedActive.length + bulkTotal;
+
+  var groomNamed  = guestState.namedGuests.filter(function(g){ return g.side === 'groom' && g.rsvp !== 'declined'; }).length;
+  var groomBulk   = guestState.bulkCounts.filter(function(b){ return b.side === 'groom'; }).reduce(function(s,b){ return s+(b.count||0); },0);
+  var brideNamed  = guestState.namedGuests.filter(function(g){ return g.side === 'bride' && g.rsvp !== 'declined'; }).length;
+  var brideBulk   = guestState.bulkCounts.filter(function(b){ return b.side === 'bride'; }).reduce(function(s,b){ return s+(b.count||0); },0);
+
+  var inviteCount    = guestState.namedGuests.filter(function(g){ return g.inviteSent; }).length;
+  var attendingCount = guestState.namedGuests.filter(function(g){ return g.rsvp === 'attending'; }).length;
+
+  function setEl(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
+  setEl('gs-cnt-total',    totalEst);
+  setEl('gs-cnt-groom',    groomNamed + groomBulk);
+  setEl('gs-cnt-bride',    brideNamed + brideBulk);
+  setEl('gs-cnt-invite',   inviteCount);
+  setEl('gs-cnt-attending',attendingCount);
+
+  // ── 직접 입력 리스트 ──
+  var namedList = document.getElementById('gs-named-list');
+  if (namedList) {
+    var filterSide  = (document.getElementById('gs-filter-side')?.value)  || 'all';
+    var filterGroup = (document.getElementById('gs-filter-group')?.value) || 'all';
+
+    var filtered = guestState.namedGuests.filter(function(g) {
+      var okSide  = filterSide  === 'all' || g.side  === filterSide;
+      var okGroup = filterGroup === 'all' || g.group === filterGroup;
+      return okSide && okGroup;
+    });
+
+    if (guestState.namedGuests.length === 0) {
+      namedList.innerHTML = '<div class="gs-empty">아직 직접 입력된 하객이 없어요</div>';
+    } else if (filtered.length === 0) {
+      namedList.innerHTML = '<div class="gs-empty">필터 조건에 맞는 하객이 없어요</div>';
+    } else {
+      var rows = '';
+      filtered.forEach(function(g) {
+        var sideCls  = g.side === 'groom' ? 'gs-side-groom' : 'gs-side-bride';
+        var rsvpCls  = 'gs-rsvp-' + (g.rsvp || 'undecided');
+        var cbChecked = g.inviteSent ? 'checked' : '';
+        rows += '<tr>' +
+          '<td><span class="gs-side-badge ' + sideCls + '">' + (GS_SIDE_LABEL[g.side]||g.side) + '</span></td>' +
+          '<td><span class="gs-group-badge">' + (GS_GROUP_LABEL[g.group]||g.group) + '</span></td>' +
+          '<td><strong>' + g.name + '</strong>' +
+            (g.memo ? '<br><span style="font-size:10px;color:var(--text-l);">' + g.memo + '</span>' : '') +
+          '</td>' +
+          '<td style="text-align:center;">' +
+            '<input class="gs-invite-cb" type="checkbox" ' + cbChecked + ' onchange="toggleInviteSent(\'' + g.id + '\')" title="청첩장 전달 완료">' +
+          '</td>' +
+          '<td>' +
+            '<select class="gs-rsvp-select ' + rsvpCls + '" id="gs-rsvp-' + g.id + '" onchange="changeRsvp(\'' + g.id + '\', this.value)">' +
+              '<option value="undecided"' + (g.rsvp==='undecided'?' selected':'') + '>미정</option>' +
+              '<option value="attending"' + (g.rsvp==='attending'?' selected':'') + '>✅ 참석</option>' +
+              '<option value="declined"'  + (g.rsvp==='declined' ?' selected':'') + '>❌ 불참</option>' +
+            '</select>' +
+          '</td>' +
+          '<td><button class="gs-del-btn" onclick="deleteNamedGuest(\'' + g.id + '\')">삭제</button></td>' +
+        '</tr>';
+      });
+      namedList.innerHTML =
+        '<table class="gs-table">' +
+          '<thead><tr>' +
+            '<th>측</th><th>그룹</th><th>이름 / 메모</th>' +
+            '<th style="text-align:center;">청첩장</th><th>RSVP</th><th></th>' +
+          '</tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+        '<div class="gs-sync-note">불참 제외 · ' + filtered.filter(function(g){return g.rsvp!=='declined';}).length + '명 예상 하객에 포함</div>';
+    }
+  }
+
+  // ── 숫자 입력 리스트 ──
+  var bulkList = document.getElementById('gs-bulk-list');
+  if (bulkList) {
+    if (guestState.bulkCounts.length === 0) {
+      bulkList.innerHTML = '<div class="gs-empty">아직 숫자 입력된 하객 그룹이 없어요</div>';
+    } else {
+      var brows = '';
+      guestState.bulkCounts.forEach(function(b) {
+        var sideCls = b.side === 'groom' ? 'gs-side-groom' : 'gs-side-bride';
+        brows += '<tr>' +
+          '<td><span class="gs-side-badge ' + sideCls + '">' + (GS_SIDE_LABEL[b.side]||b.side) + '</span></td>' +
+          '<td>' + b.label + (b.memo ? '<br><span style="font-size:10px;color:var(--text-l);">' + b.memo + '</span>' : '') + '</td>' +
+          '<td><span class="gs-bulk-count">' + (b.count||0) + '</span> 명</td>' +
+          '<td><button class="gs-del-btn" onclick="deleteBulkGuest(\'' + b.id + '\')">삭제</button></td>' +
+        '</tr>';
+      });
+      bulkList.innerHTML =
+        '<table class="gs-bulk-table">' +
+          '<thead><tr><th>측</th><th>라벨 / 메모</th><th>인원</th><th></th></tr></thead>' +
+          '<tbody>' + brows + '</tbody>' +
+        '</table>' +
+        '<div class="gs-sync-note">전체 인원 합계: <strong>' + bulkTotal + '</strong>명 예상 하객에 포함</div>';
+    }
+  }
 }

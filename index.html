@@ -274,6 +274,7 @@
     <button class="main-tab" data-panel="tab-budget" onclick="switchMain('tab-budget')">💰 예산 플래너</button>
     <button class="main-tab" data-panel="tab-todo" onclick="switchMain('tab-todo')">✅ 투두리스트</button>
     <button class="main-tab" data-panel="tab-vendors" onclick="switchMain('tab-vendors')" id="tab-btn-vendors">📇 업체관리</button>
+    <button class="main-tab" data-panel="tab-guests" onclick="switchMain('tab-guests')" id="tab-btn-guests">👥 하객관리</button>
     <button class="main-tab" data-panel="tab-realestate" onclick="switchMain('tab-realestate')" id="tab-btn-realestate">🏠 부동산</button>
     <button class="main-tab" data-panel="tab-request" onclick="switchMain('tab-request')" id="tab-btn-request">💬 요청함</button>
   </div>
@@ -620,6 +621,151 @@
             <div style="font-size:36px;margin-bottom:12px;">📇</div>
             <div>아직 등록된 업체가 없어요<br>업체를 추가해서 계약 정보를 관리해보세요!</div>
           </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB: 하객관리 -->
+  <div class="main-panel" id="tab-guests">
+
+    <!-- 상단 요약 카드 5개 -->
+    <div class="gs-summary-row">
+      <div class="gs-sum-card">
+        <div class="gs-sum-icon">👥</div>
+        <div class="gs-sum-val" id="gs-cnt-total">0</div>
+        <div class="gs-sum-label">전체 예상 하객</div>
+      </div>
+      <div class="gs-sum-card">
+        <div class="gs-sum-icon">🤵</div>
+        <div class="gs-sum-val" id="gs-cnt-groom">0</div>
+        <div class="gs-sum-label">신랑측</div>
+      </div>
+      <div class="gs-sum-card">
+        <div class="gs-sum-icon">👗</div>
+        <div class="gs-sum-val" id="gs-cnt-bride">0</div>
+        <div class="gs-sum-label">신부측</div>
+      </div>
+      <div class="gs-sum-card">
+        <div class="gs-sum-icon">💌</div>
+        <div class="gs-sum-val" id="gs-cnt-invite">0</div>
+        <div class="gs-sum-label">청첩장 전달</div>
+      </div>
+      <div class="gs-sum-card gs-sum-confirm">
+        <div class="gs-sum-icon">✅</div>
+        <div class="gs-sum-val" id="gs-cnt-attending">0</div>
+        <div class="gs-sum-label">참석 확정</div>
+      </div>
+    </div>
+
+    <!-- 직접 입력 추가 폼 -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">➕ 직접 입력 하객 추가</span>
+        <button class="gs-form-toggle-btn" onclick="toggleGuestForm('named')" id="gs-named-toggle-btn">폼 펼치기 ▾</button>
+      </div>
+      <div class="card-body" id="gs-named-form-wrap" style="display:none;">
+        <div class="gs-form-row">
+          <div class="gs-form-group">
+            <label class="gs-form-label">신랑 / 신부측</label>
+            <div class="gs-radio-group">
+              <label class="gs-radio-label"><input type="radio" name="gs-named-side" value="groom" checked> 신랑측</label>
+              <label class="gs-radio-label"><input type="radio" name="gs-named-side" value="bride"> 신부측</label>
+            </div>
+          </div>
+          <div class="gs-form-group">
+            <label class="gs-form-label">그룹</label>
+            <select class="gs-form-input" id="gs-named-group">
+              <option value="family">👨‍👩‍👧 가족</option>
+              <option value="friend">🤝 친구</option>
+              <option value="work">💼 직장</option>
+              <option value="other">📌 기타</option>
+            </select>
+          </div>
+          <div class="gs-form-group" style="flex:2;">
+            <label class="gs-form-label">이름 *</label>
+            <input class="gs-form-input" type="text" id="gs-named-name" placeholder="예) 김민준" onkeydown="if(event.key==='Enter') addNamedGuest()">
+          </div>
+          <div class="gs-form-group" style="flex:2;">
+            <label class="gs-form-label">메모</label>
+            <input class="gs-form-input" type="text" id="gs-named-memo" placeholder="예) 고등학교 친구" onkeydown="if(event.key==='Enter') addNamedGuest()">
+          </div>
+          <div class="gs-form-group" style="justify-content:flex-end;padding-top:18px;">
+            <button class="gs-add-btn" onclick="addNamedGuest()">추가 →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 숫자 입력 추가 폼 -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🔢 숫자 입력 하객 추가</span>
+        <button class="gs-form-toggle-btn" onclick="toggleGuestForm('bulk')" id="gs-bulk-toggle-btn">폼 펼치기 ▾</button>
+      </div>
+      <div class="card-body" id="gs-bulk-form-wrap" style="display:none;">
+        <div class="gs-form-row">
+          <div class="gs-form-group">
+            <label class="gs-form-label">신랑 / 신부측</label>
+            <div class="gs-radio-group">
+              <label class="gs-radio-label"><input type="radio" name="gs-bulk-side" value="groom" checked> 신랑측</label>
+              <label class="gs-radio-label"><input type="radio" name="gs-bulk-side" value="bride"> 신부측</label>
+            </div>
+          </div>
+          <div class="gs-form-group" style="flex:2;">
+            <label class="gs-form-label">라벨 *</label>
+            <input class="gs-form-input" type="text" id="gs-bulk-label" placeholder="예) 신랑측 부모님 지인" onkeydown="if(event.key==='Enter') addBulkGuest()">
+          </div>
+          <div class="gs-form-group">
+            <label class="gs-form-label">인원 수 *</label>
+            <input class="gs-form-input" type="number" id="gs-bulk-count" placeholder="0" min="1" onkeydown="if(event.key==='Enter') addBulkGuest()">
+          </div>
+          <div class="gs-form-group" style="flex:2;">
+            <label class="gs-form-label">메모</label>
+            <input class="gs-form-input" type="text" id="gs-bulk-memo" placeholder="예) 아버지측 지인" onkeydown="if(event.key==='Enter') addBulkGuest()">
+          </div>
+          <div class="gs-form-group" style="justify-content:flex-end;padding-top:18px;">
+            <button class="gs-add-btn" onclick="addBulkGuest()">추가 →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 직접 입력 하객 리스트 -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📋 직접 입력 하객 목록</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select class="gs-filter-select" id="gs-filter-side" onchange="renderGuests()">
+            <option value="all">전체</option>
+            <option value="groom">신랑측</option>
+            <option value="bride">신부측</option>
+          </select>
+          <select class="gs-filter-select" id="gs-filter-group" onchange="renderGuests()">
+            <option value="all">전체 그룹</option>
+            <option value="family">가족</option>
+            <option value="friend">친구</option>
+            <option value="work">직장</option>
+            <option value="other">기타</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="gs-named-list">
+          <div class="gs-empty">아직 직접 입력된 하객이 없어요</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 숫자 입력 하객 리스트 -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🔢 숫자 입력 하객 목록</span>
+      </div>
+      <div class="card-body">
+        <div id="gs-bulk-list">
+          <div class="gs-empty">아직 숫자 입력된 하객 그룹이 없어요</div>
         </div>
       </div>
     </div>
