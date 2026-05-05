@@ -436,6 +436,7 @@ function switchMain(id) {
   currentMainTab = id;
   updateMemoDisplay();
   if (id === 'tab-summary') { updateSummary(); renderGuidelineCards(); }
+  if (id === 'tab-vendors') { renderVendors(); }
   if (id === 'tab-realestate') { renderReGrid(); }
 }
 
@@ -1820,6 +1821,7 @@ function buildSaveData() {
     memos: JSON.parse(JSON.stringify(memos)),
     requests: JSON.parse(JSON.stringify(requests)),
     reProperties: JSON.parse(JSON.stringify(reProperties)),
+    vendors: JSON.parse(JSON.stringify(vendors)),
     savedAt: new Date().toLocaleString('ko-KR')
   };
 }
@@ -1861,6 +1863,10 @@ function applyLoadedData(data) {
   if (data.reProperties && Array.isArray(data.reProperties)) {
     reProperties = data.reProperties;
     renderReGrid();
+  }
+  if (data.vendors && Array.isArray(data.vendors)) {
+    vendors = data.vendors;
+    renderVendors();
   }
   if (data.savedAt) updateLastSaved(data.savedAt);
 }
@@ -2569,3 +2575,227 @@ window.addEventListener('load', async () => {
   // Supabase 미설정 → localStorage 모드로 바로 진행 (모달 없음)
 });
 
+
+// ═══════════════════════════════════════════════
+// 📇 업체관리 탭 (tab-vendors) — V1
+// ═══════════════════════════════════════════════
+let vendors = [];
+let vendorIdCounter = 8000;
+
+const VD_STATUS_MAP = {
+  '검토중':  { emoji:'🔍', cls:'vd-status-검토중' },
+  '계약완료':{ emoji:'✅', cls:'vd-status-계약완료' },
+  '잔금예정':{ emoji:'💳', cls:'vd-status-잔금예정' },
+  '완료':    { emoji:'🎉', cls:'vd-status-완료' },
+  '보류':    { emoji:'⏸',  cls:'vd-status-보류' },
+};
+
+function vdGenId() {
+  vendorIdCounter++;
+  return 'vd-' + vendorIdCounter;
+}
+
+function toggleVendorForm() {
+  var wrap = document.getElementById('vd-form-wrap');
+  var btn  = document.getElementById('vd-form-toggle-btn');
+  if (!wrap) return;
+  var isOpen = wrap.style.display !== 'none';
+  wrap.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = isOpen ? '폼 펼치기 ▾' : '폼 접기 ▴';
+}
+
+function openVendorFormForAdd() {
+  var wrap = document.getElementById('vd-form-wrap');
+  var btn  = document.getElementById('vd-form-toggle-btn');
+  if (wrap) { wrap.style.display = 'block'; }
+  if (btn)  { btn.textContent = '폼 접기 ▴'; }
+  resetVendorForm();
+}
+
+function resetVendorForm() {
+  var fields = ['vd-name','vd-manager','vd-phone','vd-link','vd-contractDate','vd-nextMeetingDate','vd-balanceDate','vd-memo'];
+  fields.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  var cat = document.getElementById('vd-category');
+  if (cat) cat.value = '웨딩홀';
+  var st = document.getElementById('vd-status');
+  if (st) st.value = '검토중';
+  var editId = document.getElementById('vd-edit-id');
+  if (editId) editId.value = '';
+  var saveBtn = document.getElementById('vd-save-btn');
+  if (saveBtn) saveBtn.textContent = '업체 추가하기 →';
+  var cancelBtn = document.getElementById('vd-cancel-edit-btn');
+  if (cancelBtn) cancelBtn.style.display = 'none';
+}
+
+function saveVendor() {
+  var name = (document.getElementById('vd-name').value || '').trim();
+  if (!name) { showToast('업체명을 입력해주세요'); return; }
+  var editId = document.getElementById('vd-edit-id').value;
+  var vendor = {
+    id:              editId || vdGenId(),
+    category:        document.getElementById('vd-category').value,
+    name:            name,
+    manager:         (document.getElementById('vd-manager').value || '').trim(),
+    phone:           (document.getElementById('vd-phone').value || '').trim(),
+    link:            (document.getElementById('vd-link').value || '').trim(),
+    contractDate:    document.getElementById('vd-contractDate').value,
+    nextMeetingDate: document.getElementById('vd-nextMeetingDate').value,
+    balanceDate:     document.getElementById('vd-balanceDate').value,
+    status:          document.getElementById('vd-status').value,
+    memo:            (document.getElementById('vd-memo').value || '').trim(),
+    addedAt:         editId ? (vendors.find(function(v){return v.id===editId;})?.addedAt || new Date().toISOString()) : new Date().toISOString()
+  };
+  if (editId) {
+    var idx = vendors.findIndex(function(v){return v.id===editId;});
+    if (idx >= 0) vendors[idx] = vendor;
+    showToast('✅ 업체 정보가 수정됐어요!');
+  } else {
+    vendors.push(vendor);
+    showToast('📇 업체가 등록됐어요!');
+  }
+  resetVendorForm();
+  var wrap = document.getElementById('vd-form-wrap');
+  var btn  = document.getElementById('vd-form-toggle-btn');
+  if (wrap) wrap.style.display = 'none';
+  if (btn)  btn.textContent = '폼 펼치기 ▾';
+  renderVendors();
+  saveAll();
+}
+
+function editVendor(id) {
+  var v = vendors.find(function(x){return x.id===id;});
+  if (!v) return;
+  openVendorFormForAdd();
+  document.getElementById('vd-edit-id').value    = v.id;
+  document.getElementById('vd-category').value   = v.category || '웨딩홀';
+  document.getElementById('vd-name').value        = v.name || '';
+  document.getElementById('vd-manager').value     = v.manager || '';
+  document.getElementById('vd-phone').value       = v.phone || '';
+  document.getElementById('vd-link').value        = v.link || '';
+  document.getElementById('vd-contractDate').value    = v.contractDate || '';
+  document.getElementById('vd-nextMeetingDate').value = v.nextMeetingDate || '';
+  document.getElementById('vd-balanceDate').value     = v.balanceDate || '';
+  document.getElementById('vd-status').value      = v.status || '검토중';
+  document.getElementById('vd-memo').value        = v.memo || '';
+  var saveBtn   = document.getElementById('vd-save-btn');
+  var cancelBtn = document.getElementById('vd-cancel-edit-btn');
+  if (saveBtn)   saveBtn.textContent = '수정 저장하기 →';
+  if (cancelBtn) cancelBtn.style.display = 'inline-block';
+  // 폼으로 스크롤
+  var wrap = document.getElementById('vd-form-wrap');
+  if (wrap) wrap.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function cancelVendorEdit() {
+  resetVendorForm();
+  var wrap = document.getElementById('vd-form-wrap');
+  var btn  = document.getElementById('vd-form-toggle-btn');
+  if (wrap) wrap.style.display = 'none';
+  if (btn)  btn.textContent = '폼 펼치기 ▾';
+}
+
+function deleteVendor(id) {
+  if (!confirm('이 업체를 삭제할까요?')) return;
+  vendors = vendors.filter(function(v){return v.id !== id;});
+  renderVendors();
+  showToast('삭제됐어요');
+  saveAll();
+}
+
+function vdFmtDate(dateStr) {
+  if (!dateStr) return '-';
+  var today = new Date();
+  today.setHours(0,0,0,0);
+  var d = new Date(dateStr);
+  var diff = Math.ceil((d - today) / (1000*60*60*24));
+  var ymd = dateStr.replace(/-/g,'.');
+  if (diff < 0)  return '<span style="color:var(--text-l);">' + ymd + '</span>';
+  if (diff === 0) return '<span class="vd-date-warn">오늘! (' + ymd + ')</span>';
+  if (diff <= 7)  return '<span class="vd-date-warn">D-' + diff + ' (' + ymd + ')</span>';
+  if (diff <= 30) return '<span class="vd-date-soon">D-' + diff + ' (' + ymd + ')</span>';
+  return ymd;
+}
+
+function renderVendors() {
+  // 요약 업데이트
+  var cntTotal    = vendors.length;
+  var cntContract = vendors.filter(function(v){return v.status==='계약완료';}).length;
+  var cntBalance  = vendors.filter(function(v){return v.status==='잔금예정';}).length;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var cntMeeting  = vendors.filter(function(v){
+    if (!v.nextMeetingDate) return false;
+    var d = new Date(v.nextMeetingDate);
+    return d >= today;
+  }).length;
+  var el;
+  el = document.getElementById('vd-cnt-total');    if (el) el.textContent = cntTotal;
+  el = document.getElementById('vd-cnt-contract'); if (el) el.textContent = cntContract;
+  el = document.getElementById('vd-cnt-balance');  if (el) el.textContent = cntBalance;
+  el = document.getElementById('vd-cnt-meeting');  if (el) el.textContent = cntMeeting;
+
+  var list  = document.getElementById('vd-list');
+  var empty = document.getElementById('vd-empty');
+  if (!list) return;
+
+  // 필터
+  var filterCat = (document.getElementById('vd-filter-cat')?.value) || 'all';
+  var filterSt  = (document.getElementById('vd-filter-status')?.value) || 'all';
+  var filtered  = vendors.filter(function(v) {
+    var okCat = filterCat === 'all' || v.category === filterCat;
+    var okSt  = filterSt  === 'all' || v.status   === filterSt;
+    return okCat && okSt;
+  });
+
+  if (vendors.length === 0) {
+    list.innerHTML = '<div class="vd-empty" id="vd-empty"><div style="font-size:36px;margin-bottom:12px;">📇</div><div>아직 등록된 업체가 없어요<br>업체를 추가해서 계약 정보를 관리해보세요!</div></div>';
+    return;
+  }
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="vd-empty">필터 조건에 맞는 업체가 없어요</div>';
+    return;
+  }
+
+  var rows = '';
+  filtered.forEach(function(v) {
+    var stInfo = VD_STATUS_MAP[v.status] || {emoji:'', cls:''};
+    var phoneCell = v.phone
+      ? '<a class="vd-phone-link" href="tel:' + v.phone + '">' + v.phone + '</a>'
+      : '<span style="color:var(--text-l);">-</span>';
+    var linkCell = v.link
+      ? '<a class="vd-ext-link" href="' + v.link + '" target="_blank" rel="noopener">🔗 링크</a>'
+      : '';
+    var memoCell = v.memo
+      ? '<span style="font-size:10px;color:var(--text-l);display:block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + v.memo.replace(/"/g,'&quot;') + '">' + v.memo + '</span>'
+      : '';
+    rows += '<tr>' +
+      '<td><span style="font-size:10px;color:var(--text-l);">' + (v.category||'') + '</span></td>' +
+      '<td><strong>' + v.name + '</strong>' + linkCell + (memoCell ? '<br>' + memoCell : '') + '</td>' +
+      '<td>' + (v.manager || '<span style="color:var(--text-l);">-</span>') + '</td>' +
+      '<td>' + phoneCell + '</td>' +
+      '<td>' + vdFmtDate(v.nextMeetingDate) + '</td>' +
+      '<td>' + vdFmtDate(v.balanceDate) + '</td>' +
+      '<td><span class="vd-status-badge ' + stInfo.cls + '">' + stInfo.emoji + ' ' + (v.status||'') + '</span></td>' +
+      '<td class="vd-td-actions">' +
+        '<button class="vd-action-btn" onclick="editVendor(\'' + v.id + '\')">수정</button>' +
+        '<button class="vd-action-btn del" onclick="deleteVendor(\'' + v.id + '\')">삭제</button>' +
+      '</td>' +
+    '</tr>';
+  });
+
+  list.innerHTML = '<table class="vd-list-table">' +
+    '<thead><tr>' +
+      '<th>카테고리</th>' +
+      '<th>업체명</th>' +
+      '<th>담당자</th>' +
+      '<th>연락처</th>' +
+      '<th>다음 미팅</th>' +
+      '<th>잔금일</th>' +
+      '<th>상태</th>' +
+      '<th></th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+  '</table>';
+}

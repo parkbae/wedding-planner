@@ -273,6 +273,7 @@
     <button class="main-tab" data-panel="tab-expense" onclick="switchMain('tab-expense')">📋 지출 내역</button>
     <button class="main-tab" data-panel="tab-budget" onclick="switchMain('tab-budget')">💰 예산 플래너</button>
     <button class="main-tab" data-panel="tab-todo" onclick="switchMain('tab-todo')">✅ 투두리스트</button>
+    <button class="main-tab" data-panel="tab-vendors" onclick="switchMain('tab-vendors')" id="tab-btn-vendors">📇 업체관리</button>
     <button class="main-tab" data-panel="tab-realestate" onclick="switchMain('tab-realestate')" id="tab-btn-realestate">🏠 부동산</button>
     <button class="main-tab" data-panel="tab-request" onclick="switchMain('tab-request')" id="tab-btn-request">💬 요청함</button>
   </div>
@@ -482,6 +483,147 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- TAB: 업체관리 -->
+  <div class="main-panel" id="tab-vendors">
+
+    <!-- 요약 카드 4개 -->
+    <div class="vd-summary-row" id="vd-summary-row">
+      <div class="vd-sum-card">
+        <div class="vd-sum-icon">📇</div>
+        <div class="vd-sum-val" id="vd-cnt-total">0</div>
+        <div class="vd-sum-label">전체 업체</div>
+      </div>
+      <div class="vd-sum-card">
+        <div class="vd-sum-icon">✅</div>
+        <div class="vd-sum-val" id="vd-cnt-contract">0</div>
+        <div class="vd-sum-label">계약완료</div>
+      </div>
+      <div class="vd-sum-card vd-sum-urgent">
+        <div class="vd-sum-icon">💳</div>
+        <div class="vd-sum-val" id="vd-cnt-balance">0</div>
+        <div class="vd-sum-label">잔금예정</div>
+      </div>
+      <div class="vd-sum-card">
+        <div class="vd-sum-icon">📅</div>
+        <div class="vd-sum-val" id="vd-cnt-meeting">0</div>
+        <div class="vd-sum-label">미팅예정</div>
+      </div>
+    </div>
+
+    <!-- 업체 추가 폼 카드 -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">➕ 업체 추가</span>
+        <button class="vd-form-toggle-btn" onclick="toggleVendorForm()" id="vd-form-toggle-btn">폼 펼치기 ▾</button>
+      </div>
+      <div class="card-body" id="vd-form-wrap" style="display:none;">
+        <div class="vd-form-grid">
+          <div class="vd-form-group">
+            <label class="vd-form-label">카테고리</label>
+            <select class="vd-form-input" id="vd-category">
+              <option value="웨딩홀">💒 웨딩홀</option>
+              <option value="스튜디오">📷 스튜디오</option>
+              <option value="드레스">👗 드레스</option>
+              <option value="메이크업">💄 메이크업</option>
+              <option value="부케">💐 부케</option>
+              <option value="예복">🤵 예복</option>
+              <option value="한복">👘 한복</option>
+              <option value="예물">💍 예물</option>
+              <option value="신혼여행">✈️ 신혼여행</option>
+              <option value="기타">📌 기타</option>
+            </select>
+          </div>
+          <div class="vd-form-group">
+            <label class="vd-form-label">업체명 *</label>
+            <input class="vd-form-input" type="text" id="vd-name" placeholder="예) 더세인트, 셀린웨딩...">
+          </div>
+          <div class="vd-form-group">
+            <label class="vd-form-label">담당자명</label>
+            <input class="vd-form-input" type="text" id="vd-manager" placeholder="예) 김민지 매니저">
+          </div>
+          <div class="vd-form-group">
+            <label class="vd-form-label">연락처</label>
+            <input class="vd-form-input" type="tel" id="vd-phone" placeholder="010-0000-0000">
+          </div>
+          <div class="vd-form-group">
+            <label class="vd-form-label">링크 (홈페이지/인스타)</label>
+            <input class="vd-form-input" type="url" id="vd-link" placeholder="https://...">
+          </div>
+          <div class="vd-form-group">
+            <label class="vd-form-label">계약일</label>
+            <input class="vd-form-input" type="date" id="vd-contractDate">
+          </div>
+          <div class="vd-form-group">
+            <label class="vd-form-label">다음 미팅일</label>
+            <input class="vd-form-input" type="date" id="vd-nextMeetingDate">
+          </div>
+          <div class="vd-form-group">
+            <label class="vd-form-label">잔금일</label>
+            <input class="vd-form-input" type="date" id="vd-balanceDate">
+          </div>
+          <div class="vd-form-group">
+            <label class="vd-form-label">상태</label>
+            <select class="vd-form-input" id="vd-status">
+              <option value="검토중">🔍 검토중</option>
+              <option value="계약완료">✅ 계약완료</option>
+              <option value="잔금예정">💳 잔금예정</option>
+              <option value="완료">🎉 완료</option>
+              <option value="보류">⏸ 보류</option>
+            </select>
+          </div>
+        </div>
+        <div class="vd-form-group" style="margin-top:10px;">
+          <label class="vd-form-label">메모</label>
+          <textarea class="vd-form-input vd-textarea" id="vd-memo" placeholder="특이사항, 계약 조건, 담당자 특이사항 등..."></textarea>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end;">
+          <input type="hidden" id="vd-edit-id">
+          <button class="vd-cancel-btn" onclick="cancelVendorEdit()" id="vd-cancel-edit-btn" style="display:none;">취소</button>
+          <button class="vd-add-btn" onclick="saveVendor()" id="vd-save-btn">업체 추가하기 →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 업체 리스트 -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📋 업체 목록</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select class="vd-filter-select" id="vd-filter-cat" onchange="renderVendors()">
+            <option value="all">전체 카테고리</option>
+            <option value="웨딩홀">💒 웨딩홀</option>
+            <option value="스튜디오">📷 스튜디오</option>
+            <option value="드레스">👗 드레스</option>
+            <option value="메이크업">💄 메이크업</option>
+            <option value="부케">💐 부케</option>
+            <option value="예복">🤵 예복</option>
+            <option value="한복">👘 한복</option>
+            <option value="예물">💍 예물</option>
+            <option value="신혼여행">✈️ 신혼여행</option>
+            <option value="기타">📌 기타</option>
+          </select>
+          <select class="vd-filter-select" id="vd-filter-status" onchange="renderVendors()">
+            <option value="all">전체 상태</option>
+            <option value="검토중">🔍 검토중</option>
+            <option value="계약완료">✅ 계약완료</option>
+            <option value="잔금예정">💳 잔금예정</option>
+            <option value="완료">🎉 완료</option>
+            <option value="보류">⏸ 보류</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="vd-list">
+          <div class="vd-empty" id="vd-empty">
+            <div style="font-size:36px;margin-bottom:12px;">📇</div>
+            <div>아직 등록된 업체가 없어요<br>업체를 추가해서 계약 정보를 관리해보세요!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- TAB: 부동산 -->

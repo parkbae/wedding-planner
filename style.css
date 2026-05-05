@@ -627,3 +627,70 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 @media(max-width:600px){
   .psc-grid{grid-template-columns:1fr;}
 }
+
+/* ════════════════════════════════════════════
+   📇 업체관리 탭 (tab-vendors) — vd-* 네임스페이스
+   ════════════════════════════════════════════ */
+.vd-summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.vd-sum-card{background:white;border-radius:14px;padding:18px 16px;text-align:center;box-shadow:0 2px 12px rgba(44,49,73,0.06);border:1.5px solid var(--border);transition:box-shadow 0.2s;}
+.vd-sum-card:hover{box-shadow:0 4px 20px rgba(44,49,73,0.1);}
+.vd-sum-urgent{border-color:rgba(201,131,122,0.35);}
+.vd-sum-icon{font-size:22px;margin-bottom:6px;}
+.vd-sum-val{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy);line-height:1;}
+.vd-sum-label{font-size:11px;color:var(--text-l);margin-top:4px;font-weight:500;}
+
+.vd-form-toggle-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:11px;color:var(--text-l);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;}
+.vd-form-toggle-btn:hover{border-color:var(--gold);color:var(--navy);}
+
+.vd-form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.vd-form-group{display:flex;flex-direction:column;gap:5px;}
+.vd-form-label{font-size:11px;color:var(--text-l);font-weight:500;}
+.vd-form-input{border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:12px;font-family:'Noto Sans KR',sans-serif;color:var(--text);outline:none;transition:border 0.2s;background:white;width:100%;}
+.vd-form-input:focus{border-color:var(--gold);}
+.vd-textarea{min-height:72px;resize:vertical;}
+
+.vd-add-btn{background:var(--navy);color:white;border:none;border-radius:9px;padding:10px 20px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:background 0.2s;}
+.vd-add-btn:hover{background:var(--navy-l);}
+.vd-cancel-btn{background:white;color:var(--text-l);border:1px solid var(--border);border-radius:9px;padding:10px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;}
+.vd-cancel-btn:hover{border-color:var(--rose);color:var(--rose);}
+
+.vd-filter-select{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:11px;font-family:'Noto Sans KR',sans-serif;color:var(--text);outline:none;cursor:pointer;background:white;}
+
+.vd-list-table{width:100%;border-collapse:collapse;font-size:12px;}
+.vd-list-table th{background:var(--cream);color:var(--text-l);font-weight:500;padding:9px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+.vd-list-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.vd-list-table tr:last-child td{border-bottom:none;}
+.vd-list-table tr:hover td{background:var(--blush);}
+.vd-list-table .vd-td-actions{white-space:nowrap;text-align:right;}
+
+.vd-status-badge{display:inline-block;font-size:10px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;}
+.vd-status-검토중{background:rgba(139,159,201,0.15);color:#4a6da8;}
+.vd-status-계약완료{background:rgba(122,171,138,0.15);color:#4a8a5e;}
+.vd-status-잔금예정{background:rgba(201,131,122,0.18);color:#a85e56;}
+.vd-status-완료{background:rgba(122,171,138,0.25);color:#2d6645;}
+.vd-status-보류{background:rgba(180,180,180,0.18);color:#888;}
+
+.vd-action-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:10px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text-l);transition:all 0.2s;margin-left:4px;}
+.vd-action-btn:hover{border-color:var(--gold);color:var(--navy);}
+.vd-action-btn.del:hover{border-color:var(--rose);color:var(--rose-deep);background:rgba(201,131,122,0.06);}
+
+.vd-phone-link{color:var(--navy);text-decoration:none;font-weight:500;}
+.vd-phone-link:hover{color:var(--gold);text-decoration:underline;}
+.vd-ext-link{font-size:10px;color:var(--gold);text-decoration:none;margin-left:4px;}
+.vd-ext-link:hover{text-decoration:underline;}
+
+.vd-date-warn{color:var(--rose-deep);font-weight:600;}
+.vd-date-soon{color:#8a6a2e;font-weight:600;}
+
+.vd-empty{text-align:center;padding:48px 20px;color:var(--text-l);font-size:13px;line-height:1.8;}
+
+@media(max-width:768px){
+  .vd-summary-row{grid-template-columns:repeat(2,1fr);}
+  .vd-form-grid{grid-template-columns:1fr 1fr;}
+  .vd-list-table{font-size:11px;}
+  .vd-list-table .vd-td-memo,.vd-list-table .vd-th-memo{display:none;}
+}
+@media(max-width:480px){
+  .vd-summary-row{grid-template-columns:repeat(2,1fr);}
+  .vd-form-grid{grid-template-columns:1fr;}
+}
