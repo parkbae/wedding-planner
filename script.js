@@ -1429,6 +1429,8 @@ let sbClient = null;
 let currentUser = null;
 let currentWeddingId = null;
 let realtimeChannel = null;
+// 마지막으로 서버에서 로드한 updated_at (충돌 감지용)
+let lastServerUpdatedAt = null;
 
 // Supabase 초기화 시도
 function initSupabase() {
@@ -1623,9 +1625,11 @@ function copyInviteCode() {
 async function loadFromSupabase() {
   if (!sbClient || !currentWeddingId) return false;
   const { data: row, error } = await sbClient.from('planner_data')
-    .select('data').eq('wedding_id', currentWeddingId).single();
+    .select('data, updated_at').eq('wedding_id', currentWeddingId).single();
   if (error || !row?.data) return false;
   applyLoadedData(row.data);
+  // 마지막 서버 기준 시각 갱신 (충돌 감지용)
+  if (row.updated_at) lastServerUpdatedAt = row.updated_at;
   return true;
 }
 
@@ -1734,9 +1738,60 @@ async function saveAll() {
   const data = buildSaveData();
   // 항상 localStorage 저장 (오프라인 백업)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  // 저장 처리
+
   if (sbClient && currentUser) {
     if (currentPlan === 'pro') {
+      // ── 충돌 감지: 저장 직전 서버 최신 updated_at 재조회 ──
+      let conflictDetected = false;
+      try {
+        const { data: latest, error: fetchErr } = await sbClient
+          .from('planner_data')
+          .select('updated_at, updated_by')
+          .eq('wedding_id', currentWeddingId)
+          .single();
+        if (fetchErr) {
+          // 조회 실패 시: 조용히 저장 진행하지 않고 사용자에게 안내
+          const proceed = confirm(
+            '서버 상태를 확인할 수 없어요.\n' +
+            '네트워크 문제일 수 있습니다.\n\n' +
+            '그래도 저장하시겠어요?'
+          );
+          if (!proceed) { showToast('저장이 취소됐어요.'); return; }
+        } else if (latest && lastServerUpdatedAt !== null) {
+          const serverTime = new Date(latest.updated_at).getTime();
+          const knownTime  = new Date(lastServerUpdatedAt).getTime();
+          const byPartner  = latest.updated_by !== currentUser.id;
+          if (byPartner && serverTime > knownTime) {
+            conflictDetected = true;
+          }
+        }
+        // lastServerUpdatedAt이 null이면 첫 로딩 상태 → 충돌 비교 생략, 그냥 저장
+      } catch(e) {
+        console.warn('[Planner] 충돌 감지 중 오류:', e);
+        // 예외 발생 시에도 조용히 진행하지 않고 확인 요청
+        const proceed = confirm(
+          '저장 전 충돌 확인 중 오류가 발생했어요.\n그래도 저장하시겠어요?'
+        );
+        if (!proceed) { showToast('저장이 취소됐어요.'); return; }
+      }
+
+      if (conflictDetected) {
+        const force = confirm(
+          '⚠️ 상대방이 먼저 저장한 최신 내용이 있습니다.\n' +
+          '지금 저장하면 상대방 변경사항을 덮어쓸 수 있어요.\n\n' +
+          '강제로 저장할까요?\n\n' +
+          '[확인] 강제 저장\n[취소] 최신 내용 불러오기'
+        );
+        if (!force) {
+          // 취소 → 서버 최신 상태로 복원
+          showToast('🔄 최신 내용을 불러오는 중...');
+          await loadFromSupabase();
+          showToast('✅ 최신 내용으로 복원됐어요.');
+          return;
+        }
+        // 강제 저장 진행 (아래 saveToSupabase 호출로 이어짐)
+      }
+
       const ok = await saveToSupabase();
       showToast(ok ? '☁️ 클라우드 저장됐어요!' : '💾 로컬 저장됐어요 (네트워크 오류)');
     } else {
@@ -2296,13 +2351,18 @@ async function saveToSupabase() {
   if (!sbClient || !currentWeddingId || !currentUser) return false;
   if (currentPlan !== 'pro') return false; // 무료는 로컬만
   const data = buildSaveData();
+  const nowIso = new Date().toISOString();
   const { error } = await sbClient.from('planner_data')
     .upsert({
       wedding_id: currentWeddingId,
       data,
       updated_by: currentUser.id,
-      updated_at: new Date().toISOString()
+      updated_at: nowIso
     }, { onConflict: 'wedding_id' });
+  if (!error) {
+    // 저장 성공 시 기준 시각 갱신 → 다음 저장 시 충돌 감지 기준으로 사용
+    lastServerUpdatedAt = nowIso;
+  }
   return !error;
 }
 
@@ -2319,10 +2379,12 @@ function subscribeRealtime() {
       event: 'UPDATE',
       schema: 'public',
       table: 'planner_data',
-      filter: `wedding_id=eq.${currentWeddingId}`
+      filter: 'wedding_id=eq.' + currentWeddingId
     }, (payload) => {
       if (payload.new.updated_by === currentUser?.id) return;
       applyLoadedData(payload.new.data);
+      // 파트너 저장 수신 후 기준 시각 갱신 → 이후 저장 시 충돌 미발생
+      if (payload.new.updated_at) lastServerUpdatedAt = payload.new.updated_at;
       showToast('🔄 파트너가 업데이트했어요!');
     })
     .subscribe();
