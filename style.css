@@ -594,3 +594,36 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   .re-price-grid{grid-template-columns:1fr 1fr;}
   .re-form-row,.re-form-row-3{grid-template-columns:1fr;}
 }
+
+/* ── 결제 일정 / 현금흐름 카드 ── */
+.payment-schedule-card{background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(44,49,73,0.06);margin-top:20px;margin-bottom:0;}
+.psc-header{padding:16px 22px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.psc-title{font-family:'Noto Serif KR',serif;font-size:14px;font-weight:600;color:var(--navy);}
+.psc-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(201,131,122,0.1);color:var(--rose-deep);}
+.psc-badge.none{background:rgba(122,171,138,0.1);color:var(--success);}
+.psc-body{padding:18px 22px;}
+.psc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.psc-stat{background:var(--cream);border-radius:12px;padding:14px 16px;}
+.psc-stat-label{font-size:11px;color:var(--text-l);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.psc-stat-amt{font-family:'DM Serif Display',serif;font-size:22px;color:var(--navy);}
+.psc-stat-amt.urgent{color:var(--rose-deep);}
+.psc-stat-amt.none{color:var(--success);font-size:16px;}
+.psc-stat-sub{font-size:10px;color:var(--text-l);margin-top:3px;}
+.psc-list-title{font-size:11px;font-weight:600;color:var(--navy);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.psc-items{display:flex;flex-direction:column;gap:7px;}
+.psc-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:var(--blush);border:1px solid rgba(201,131,122,0.2);}
+.psc-item.d30{background:rgba(255,245,230,1);border-color:rgba(201,169,110,0.35);}
+.psc-item-dot{width:8px;height:8px;border-radius:50%;background:var(--rose);flex-shrink:0;}
+.psc-item.d30 .psc-item-dot{background:var(--gold);}
+.psc-item-name{flex:1;font-size:12px;color:var(--text);min-width:0;}
+.psc-item-sec{font-size:10px;color:var(--text-l);display:block;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.psc-item-right{text-align:right;flex-shrink:0;}
+.psc-item-amt{font-size:13px;font-weight:600;color:var(--navy);font-variant-numeric:tabular-nums;}
+.psc-item-date{font-size:10px;color:var(--text-l);margin-top:1px;}
+.psc-item-tag{font-size:9px;font-weight:600;padding:2px 7px;border-radius:99px;background:rgba(201,131,122,0.15);color:var(--rose-deep);margin-left:4px;}
+.psc-item-tag.d30{background:rgba(201,169,110,0.15);color:#8a6a2e;}
+.psc-empty{text-align:center;padding:20px;color:var(--success);font-size:12px;}
+.psc-more{text-align:center;font-size:11px;color:var(--text-l);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);}
+@media(max-width:600px){
+  .psc-grid{grid-template-columns:1fr;}
+}

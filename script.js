@@ -1121,14 +1121,13 @@ function updateSummary() {
 
   calcNet();
   renderGuidelineCards();
+  renderPaymentSchedule();
 }
 
 // 서브탭 전환 (3컬럼 변경 후 no-op — 하위 호환용)
 function switchSumTab(tab) {
   // 3컬럼 레이아웃으로 변경되어 탭 전환 불필요
 }
-
-
 function calcNet() {
   const guestsEl = document.getElementById('guests');
   const perGiftEl = document.getElementById('gift-per');
@@ -1143,6 +1142,174 @@ function calcNet() {
   const sumAll = budgetTabs.reduce((s,tab)=>s+tab.items.reduce((ss,i)=>ss+(i.val||0),0), 0);
   const nc = document.getElementById('net-cost');
   if (nc) nc.textContent = fmt(Math.max(0, sumAll - totalGift)) + ' 만원';
+}
+
+// ── 결제 일정 / 현금흐름 집계 & 렌더 ──
+// 기준: balanceDate 형식 'yy.mm.dd' → 파싱 후 오늘 이후 항목만 집계
+// balanceAmt > 0인 row만 집계 (잔금 없는 항목 제외)
+function parseBalanceDate(str) {
+  if (!str || typeof str !== 'string') return null;
+  var clean = str.trim();
+  var m = clean.match(/^(\d{2})[.\-](\d{2})[.\-](\d{2})$/);
+  if (!m) return null;
+  var year = 2000 + parseInt(m[1], 10);
+  var month = parseInt(m[2], 10) - 1;
+  var day = parseInt(m[3], 10);
+  var d = new Date(year, month, day);
+  if (isNaN(d.getTime())) return null;
+  if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) return null;
+  return d;
+}
+
+function renderPaymentSchedule() {
+  var listEl = document.getElementById('psc-items-list');
+  var headerBadge = document.getElementById('psc-header-badge');
+  var thisMonthAmtEl = document.getElementById('psc-thismonth-amt');
+  var thisMonthSubEl = document.getElementById('psc-thismonth-sub');
+  var d30AmtEl = document.getElementById('psc-d30-amt');
+  var d30SubEl = document.getElementById('psc-d30-sub');
+  var listCountEl = document.getElementById('psc-list-count');
+  var moreEl = document.getElementById('psc-more');
+  if (!listEl) return;
+
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  var todayY = today.getFullYear();
+  var todayM = today.getMonth();
+
+  var d30Limit = new Date(today);
+  d30Limit.setDate(d30Limit.getDate() + 30);
+
+  var totalThisMonth = 0;
+  var countThisMonth = 0;
+  var totalD30 = 0;
+  var countD30 = 0;
+  var allItems = [];
+
+  expenseSections.forEach(function(sec) {
+    sec.rows.forEach(function(row) {
+      var amt = row.balanceAmt || 0;
+      if (amt <= 0) return;
+      var d = parseBalanceDate(row.balanceDate);
+      if (!d) return;
+      d.setHours(0, 0, 0, 0);
+      if (d < today) return;
+
+      var isThisMonth = (d.getFullYear() === todayY && d.getMonth() === todayM);
+      var isD30 = (d >= today && d <= d30Limit);
+
+      if (isThisMonth) { totalThisMonth += amt; countThisMonth++; }
+      if (isD30)       { totalD30 += amt; countD30++; }
+
+      allItems.push({
+        secName: sec.name,
+        rowName: row.name,
+        amt: amt,
+        date: d,
+        dateStr: row.balanceDate,
+        isThisMonth: isThisMonth,
+        isD30: isD30
+      });
+    });
+  });
+
+  allItems.sort(function(a, b) { return a.date - b.date; });
+
+  if (headerBadge) {
+    var urgentCount = allItems.filter(function(i) { return i.isD30; }).length;
+    if (urgentCount === 0) {
+      headerBadge.textContent = '예정 없음 ✓';
+      headerBadge.className = 'psc-badge none';
+    } else {
+      headerBadge.textContent = 'D-30 내 ' + urgentCount + '건';
+      headerBadge.className = 'psc-badge';
+    }
+  }
+
+  if (thisMonthAmtEl) {
+    if (totalThisMonth > 0) {
+      thisMonthAmtEl.textContent = fmt(totalThisMonth) + ' 만원';
+      thisMonthAmtEl.className = 'psc-stat-amt';
+    } else {
+      thisMonthAmtEl.textContent = '없음';
+      thisMonthAmtEl.className = 'psc-stat-amt none';
+    }
+  }
+  if (thisMonthSubEl) {
+    thisMonthSubEl.textContent = countThisMonth > 0
+      ? countThisMonth + '개 항목 · ' + todayY + '년 ' + (todayM + 1) + '월 기준'
+      : todayY + '년 ' + (todayM + 1) + '월 납부 예정 없음';
+  }
+
+  if (d30AmtEl) {
+    if (totalD30 > 0) {
+      d30AmtEl.textContent = fmt(totalD30) + ' 만원';
+      d30AmtEl.className = 'psc-stat-amt urgent';
+    } else {
+      d30AmtEl.textContent = '없음';
+      d30AmtEl.className = 'psc-stat-amt none';
+    }
+  }
+  if (d30SubEl) {
+    d30SubEl.textContent = countD30 > 0
+      ? countD30 + '개 항목 · 오늘~D+30일 이내'
+      : '30일 이내 납부 예정 없음';
+  }
+
+  var SHOW_MAX = 5;
+  listEl.innerHTML = '';
+
+  var urgentItems = allItems.filter(function(i) { return i.isD30; });
+  var otherItems  = allItems.filter(function(i) { return !i.isD30; });
+  var displayItems = urgentItems.concat(otherItems);
+
+  if (listCountEl) {
+    listCountEl.textContent = displayItems.length > 0 ? '(' + displayItems.length + '건)' : '';
+  }
+
+  if (displayItems.length === 0) {
+    listEl.innerHTML = '<div class="psc-empty">납부 예정 항목이 없어요 ✓</div>';
+    if (moreEl) moreEl.style.display = 'none';
+    return;
+  }
+
+  var showItems = displayItems.slice(0, SHOW_MAX);
+  showItems.forEach(function(item) {
+    var div = document.createElement('div');
+    div.className = 'psc-item' + (item.isD30 ? ' d30' : '');
+
+    var diffMs = item.date.getTime() - today.getTime();
+    var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    var dDayStr = diffDays === 0 ? 'D-Day' : 'D-' + diffDays;
+
+    var tagClass = item.isD30 ? 'psc-item-tag d30' : 'psc-item-tag';
+    var tagText = item.isD30 ? dDayStr : item.dateStr;
+    var secClean = item.secName.replace(/[^\w\s\uAC00-\uD7A3·]/g, '').trim();
+
+    div.innerHTML =
+      '<div class="psc-item-dot"></div>' +
+      '<div class="psc-item-name">' +
+        esc(item.rowName) +
+        '<span class="psc-item-sec">' + esc(secClean) + '</span>' +
+      '</div>' +
+      '<div class="psc-item-right">' +
+        '<div class="psc-item-amt">' + fmt(item.amt) + ' 만원' +
+          '<span class="' + tagClass + '">' + tagText + '</span>' +
+        '</div>' +
+        '<div class="psc-item-date">' + esc(item.dateStr) + '</div>' +
+      '</div>';
+    listEl.appendChild(div);
+  });
+
+  if (moreEl) {
+    var remaining = displayItems.length - SHOW_MAX;
+    if (remaining > 0) {
+      moreEl.style.display = 'block';
+      moreEl.textContent = '+ ' + remaining + '개 항목은 지출 내역 탭에서 확인하세요';
+    } else {
+      moreEl.style.display = 'none';
+    }
+  }
 }
 
 // ── 투두리스트 (인라인 편집 + 탭 간 이동) ──
