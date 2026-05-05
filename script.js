@@ -1285,14 +1285,28 @@ function startEditTodo(spanEl) {
 function toggleMoveMenu(btn) {
   const menu = btn.nextElementSibling;
   // 다른 열린 메뉴 닫기
-  document.querySelectorAll('.move-menu.open').forEach(m => { if(m !== menu) m.classList.remove('open'); });
+  document.querySelectorAll('.move-menu.open').forEach(m => {
+    if (m !== menu) { m.classList.remove('open'); m.classList.remove('drop-up'); }
+  });
+  const isOpening = !menu.classList.contains('open');
   menu.classList.toggle('open');
+  // viewport 하단 초과 시 위로 열기
+  if (isOpening) {
+    menu.classList.remove('drop-up');
+    const rect = menu.getBoundingClientRect();
+    if (rect.bottom > window.innerHeight - 8) {
+      menu.classList.add('drop-up');
+    }
+  } else {
+    menu.classList.remove('drop-up');
+  }
   // 외부 클릭 시 닫기
   if (menu.classList.contains('open')) {
     setTimeout(() => {
       document.addEventListener('click', function handler(e) {
         if (!menu.contains(e.target) && e.target !== btn) {
           menu.classList.remove('open');
+          menu.classList.remove('drop-up');
           document.removeEventListener('click', handler);
         }
       });
