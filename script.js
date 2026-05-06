@@ -2312,16 +2312,24 @@ document.addEventListener('keydown', e => {
 let requests = [];
 
 const REQ_CATEGORY_LABEL = {
-  expense: '📋 지출 내역',
-  budget:  '💰 예산 플래너',
-  todo:    '✅ 투두리스트',
-  other:   '💡 기타'
+  expense:    '📋 지출 내역',
+  budget:     '💰 예산 플래너',
+  todo:       '✅ 투두리스트',
+  summary:    '📊 요약',
+  vendors:    '📇 업체관리',
+  guests:     '👥 하객관리',
+  realestate: '🏠 부동산',
+  other:      '💡 기타'
 };
 const REQ_CATEGORY_CLASS = {
-  expense: 'rb-expense',
-  budget:  'rb-budget',
-  todo:    'rb-todo',
-  other:   'rb-other'
+  expense:    'rb-expense',
+  budget:     'rb-budget',
+  todo:       'rb-todo',
+  summary:    'rb-summary',
+  vendors:    'rb-vendors',
+  guests:     'rb-guests',
+  realestate: 'rb-realestate',
+  other:      'rb-other'
 };
 
 function addRequest() {
@@ -2809,7 +2817,7 @@ function renderVendors() {
 }
 
 // ═══════════════════════════════════════════════
-// 👥 하객관리 탭 (tab-guests) — V1
+// 👥 하객관리 탭 (tab-guests) — V2
 // ═══════════════════════════════════════════════
 var guestState = {
   namedGuests: [],
@@ -2851,13 +2859,16 @@ function addNamedGuest() {
   var side = 'groom';
   for (var i = 0; i < sideEls.length; i++) { if (sideEls[i].checked) { side = sideEls[i].value; break; } }
   var guest = {
-    id:         gsGenId(),
-    side:       side,
-    group:      document.getElementById('gs-named-group').value || 'other',
-    name:       name,
-    inviteSent: false,
-    rsvp:       'undecided',
-    memo:       (document.getElementById('gs-named-memo').value || '').trim()
+    id:                 gsGenId(),
+    side:               side,
+    group:              document.getElementById('gs-named-group').value || 'other',
+    name:               name,
+    inviteSent:         false,
+    physicalInviteSent: false,
+    mobileInviteSent:   false,
+    inviteMeetingDone:  false,
+    rsvp:               'undecided',
+    memo:               (document.getElementById('gs-named-memo').value || '').trim()
   };
   guestState.namedGuests.push(guest);
   document.getElementById('gs-named-name').value = '';
@@ -2894,14 +2905,35 @@ function addBulkGuest() {
   showToast('🔢 하객 그룹이 추가됐어요!');
 }
 
-// ── 청첩장 전달 토글 ──
-function toggleInviteSent(id) {
+// ── 숫자 입력 하객 인원 +/- 수정 ──
+function updateBulkGuestCount(id, delta) {
+  var b = guestState.bulkCounts.find(function(x){ return x.id === id; });
+  if (!b) return;
+  var newCount = (b.count || 0) + delta;
+  if (newCount < 0) newCount = 0;
+  b.count = newCount;
+  renderGuests();
+  syncGuestCountToSummary();
+  // saveAll()은 의도적으로 호출하지 않음:
+  // +/- 연타 시 Supabase 쿼리 반복·충돌 confirm 팝업을 방지하기 위해
+  // 저장은 사용자가 💾 저장하기 버튼을 눌렀을 때 일괄 반영됩니다.
+}
+
+// ── 청첩장 필드 토글 (physicalInviteSent / mobileInviteSent / inviteMeetingDone) ──
+function toggleInviteField(id, field) {
   var g = guestState.namedGuests.find(function(x){ return x.id === id; });
   if (!g) return;
-  g.inviteSent = !g.inviteSent;
+  g[field] = !g[field];
+  // 기존 inviteSent 호환: physical 또는 mobile 중 하나라도 true면 inviteSent도 true 유지
+  g.inviteSent = !!(g.physicalInviteSent || g.mobileInviteSent);
   renderGuests();
   syncGuestCountToSummary();
   saveAll();
+}
+
+// 기존 toggleInviteSent 호환 유지 (구버전 데이터 체크박스 이벤트 대비)
+function toggleInviteSent(id) {
+  toggleInviteField(id, 'physicalInviteSent');
 }
 
 // ── RSVP 변경 ──
@@ -2909,11 +2941,8 @@ function changeRsvp(id, val) {
   var g = guestState.namedGuests.find(function(x){ return x.id === id; });
   if (!g) return;
   g.rsvp = val;
-  // select 클래스 갱신
   var sel = document.getElementById('gs-rsvp-' + id);
-  if (sel) {
-    sel.className = 'gs-rsvp-select gs-rsvp-' + val;
-  }
+  if (sel) { sel.className = 'gs-rsvp-select gs-rsvp-' + val; }
   syncGuestCountToSummary();
   saveAll();
 }
@@ -2938,44 +2967,89 @@ function deleteBulkGuest(id) {
   showToast('삭제됐어요');
 }
 
-// ── 요약 탭 #guests 연동 ──
+// ── 기존 namedGuest 데이터 마이그레이션 (inviteSent → physicalInviteSent) ──
+function migrateGuestFields() {
+  guestState.namedGuests.forEach(function(g) {
+    // 신규 필드가 없는 구버전 데이터 보정
+    if (typeof g.physicalInviteSent === 'undefined') {
+      g.physicalInviteSent = !!(g.inviteSent);
+    }
+    if (typeof g.mobileInviteSent === 'undefined')  { g.mobileInviteSent  = false; }
+    if (typeof g.inviteMeetingDone === 'undefined')  { g.inviteMeetingDone = false; }
+  });
+}
+
+// ── 관리 하객 수 계산 (managedGuestCount) ──
+function calcManagedGuestCount() {
+  var namedActive = guestState.namedGuests.filter(function(g){ return g.rsvp !== 'declined'; }).length;
+  var bulkTotal   = guestState.bulkCounts.reduce(function(s, b){ return s + (b.count || 0); }, 0);
+  return namedActive + bulkTotal;
+}
+
+// ── 요약 탭 #guests 연동 (개선된 로직) ──
 function syncGuestCountToSummary() {
   if (guestState.namedGuests.length === 0 && guestState.bulkCounts.length === 0) return;
-  var namedCount = guestState.namedGuests.filter(function(g){ return g.rsvp !== 'declined'; }).length;
-  var bulkCount  = guestState.bulkCounts.reduce(function(s, b){ return s + (b.count || 0); }, 0);
-  var total = namedCount + bulkCount;
-  var el = document.getElementById('guests');
-  if (el) { el.value = total; }
+  var managed = calcManagedGuestCount();
+  var guestsEl = document.getElementById('guests');
+  var target = guestsEl ? (parseInt(guestsEl.value, 10) || 0) : 0;
+
+  var finalTotal;
+  if (target > managed) {
+    // target이 더 크면: 차액을 기타 미지정으로 처리, 전체는 target 기준
+    finalTotal = target;
+  } else {
+    // managed가 target 이상이면: managed를 전체로 사용, #guests 동기화
+    finalTotal = managed;
+    if (guestsEl) guestsEl.value = managed;
+  }
+
   if (typeof calcNet === 'function') calcNet();
 }
 
 // ── 렌더 (직접 입력 + 숫자 입력) ──
 function renderGuests() {
-  // 요약 카드 업데이트
-  var namedActive = guestState.namedGuests.filter(function(g){ return g.rsvp !== 'declined'; });
-  var bulkTotal   = guestState.bulkCounts.reduce(function(s, b){ return s + (b.count || 0); }, 0);
-  var totalEst    = namedActive.length + bulkTotal;
+  migrateGuestFields();
 
-  var groomNamed  = guestState.namedGuests.filter(function(g){ return g.side === 'groom' && g.rsvp !== 'declined'; }).length;
-  var groomBulk   = guestState.bulkCounts.filter(function(b){ return b.side === 'groom'; }).reduce(function(s,b){ return s+(b.count||0); },0);
-  var brideNamed  = guestState.namedGuests.filter(function(g){ return g.side === 'bride' && g.rsvp !== 'declined'; }).length;
-  var brideBulk   = guestState.bulkCounts.filter(function(b){ return b.side === 'bride'; }).reduce(function(s,b){ return s+(b.count||0); },0);
+  var managed  = calcManagedGuestCount();
+  var guestsEl = document.getElementById('guests');
+  var target   = guestsEl ? (parseInt(guestsEl.value, 10) || 0) : 0;
 
-  var inviteCount    = guestState.namedGuests.filter(function(g){ return g.inviteSent; }).length;
+  var displayTotal;
+  var unassigned;
+  if (target > managed) {
+    displayTotal = target;
+    unassigned   = target - managed;
+  } else {
+    displayTotal = managed;
+    unassigned   = 0;
+  }
+
+  var groomNamed = guestState.namedGuests.filter(function(g){ return g.side === 'groom' && g.rsvp !== 'declined'; }).length;
+  var groomBulk  = guestState.bulkCounts.filter(function(b){ return b.side === 'groom'; }).reduce(function(s,b){ return s+(b.count||0); },0);
+  var brideNamed = guestState.namedGuests.filter(function(g){ return g.side === 'bride' && g.rsvp !== 'declined'; }).length;
+  var brideBulk  = guestState.bulkCounts.filter(function(b){ return b.side === 'bride'; }).reduce(function(s,b){ return s+(b.count||0); },0);
+
+  // 청첩장 전달 완료: physical 또는 mobile 중 하나라도 true
+  var inviteCount    = guestState.namedGuests.filter(function(g){ return !!(g.physicalInviteSent || g.mobileInviteSent); }).length;
   var attendingCount = guestState.namedGuests.filter(function(g){ return g.rsvp === 'attending'; }).length;
 
   function setEl(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
-  setEl('gs-cnt-total',    totalEst);
+  setEl('gs-cnt-total',    displayTotal);
   setEl('gs-cnt-groom',    groomNamed + groomBulk);
   setEl('gs-cnt-bride',    brideNamed + brideBulk);
   setEl('gs-cnt-invite',   inviteCount);
   setEl('gs-cnt-attending',attendingCount);
+  setEl('gs-cnt-unassigned', unassigned);
+
+  // 기타 미지정 카드 표시 제어
+  var unassignedCard = document.getElementById('gs-unassigned-card');
+  if (unassignedCard) unassignedCard.style.display = unassigned > 0 ? '' : 'none';
 
   // ── 직접 입력 리스트 ──
   var namedList = document.getElementById('gs-named-list');
   if (namedList) {
-    var filterSide  = (document.getElementById('gs-filter-side')?.value)  || 'all';
-    var filterGroup = (document.getElementById('gs-filter-group')?.value) || 'all';
+    var filterSide  = (document.getElementById('gs-filter-side') ? document.getElementById('gs-filter-side').value : 'all') || 'all';
+    var filterGroup = (document.getElementById('gs-filter-group') ? document.getElementById('gs-filter-group').value : 'all') || 'all';
 
     var filtered = guestState.namedGuests.filter(function(g) {
       var okSide  = filterSide  === 'all' || g.side  === filterSide;
@@ -2992,15 +3066,26 @@ function renderGuests() {
       filtered.forEach(function(g) {
         var sideCls  = g.side === 'groom' ? 'gs-side-groom' : 'gs-side-bride';
         var rsvpCls  = 'gs-rsvp-' + (g.rsvp || 'undecided');
-        var cbChecked = g.inviteSent ? 'checked' : '';
+        var cbPhy  = g.physicalInviteSent  ? 'checked' : '';
+        var cbMob  = g.mobileInviteSent    ? 'checked' : '';
+        var cbMeet = g.inviteMeetingDone   ? 'checked' : '';
         rows += '<tr>' +
           '<td><span class="gs-side-badge ' + sideCls + '">' + (GS_SIDE_LABEL[g.side]||g.side) + '</span></td>' +
           '<td><span class="gs-group-badge">' + (GS_GROUP_LABEL[g.group]||g.group) + '</span></td>' +
           '<td><strong>' + g.name + '</strong>' +
             (g.memo ? '<br><span style="font-size:10px;color:var(--text-l);">' + g.memo + '</span>' : '') +
           '</td>' +
+          // 실물 청첩장
           '<td style="text-align:center;">' +
-            '<input class="gs-invite-cb" type="checkbox" ' + cbChecked + ' onchange="toggleInviteSent(\'' + g.id + '\')" title="청첩장 전달 완료">' +
+            '<input class="gs-invite-cb" type="checkbox" ' + cbPhy + ' onchange="toggleInviteField(\'' + g.id + '\',\'physicalInviteSent\')" title="실물 청첩장">' +
+          '</td>' +
+          // 모바일 청첩장
+          '<td style="text-align:center;">' +
+            '<input class="gs-invite-cb" type="checkbox" ' + cbMob + ' onchange="toggleInviteField(\'' + g.id + '\',\'mobileInviteSent\')" title="모바일 청첩장">' +
+          '</td>' +
+          // 청첩장 모임
+          '<td style="text-align:center;">' +
+            '<input class="gs-invite-cb gs-invite-meeting" type="checkbox" ' + cbMeet + ' onchange="toggleInviteField(\'' + g.id + '\',\'inviteMeetingDone\')" title="청첩장 모임">' +
           '</td>' +
           '<td>' +
             '<select class="gs-rsvp-select ' + rsvpCls + '" id="gs-rsvp-' + g.id + '" onchange="changeRsvp(\'' + g.id + '\', this.value)">' +
@@ -3016,7 +3101,10 @@ function renderGuests() {
         '<table class="gs-table">' +
           '<thead><tr>' +
             '<th>측</th><th>그룹</th><th>이름 / 메모</th>' +
-            '<th style="text-align:center;">청첩장</th><th>RSVP</th><th></th>' +
+            '<th style="text-align:center;" title="실물 청첩장">실물</th>' +
+            '<th style="text-align:center;" title="모바일 청첩장">모바일</th>' +
+            '<th style="text-align:center;" title="청첩장 모임">모임</th>' +
+            '<th>RSVP</th><th></th>' +
           '</tr></thead>' +
           '<tbody>' + rows + '</tbody>' +
         '</table>' +
@@ -3024,9 +3112,10 @@ function renderGuests() {
     }
   }
 
-  // ── 숫자 입력 리스트 ──
+  // ── 숫자 입력 리스트 (+/- 버튼 포함) ──
   var bulkList = document.getElementById('gs-bulk-list');
   if (bulkList) {
+    var bulkTotal = guestState.bulkCounts.reduce(function(s, b){ return s + (b.count || 0); }, 0);
     if (guestState.bulkCounts.length === 0) {
       bulkList.innerHTML = '<div class="gs-empty">아직 숫자 입력된 하객 그룹이 없어요</div>';
     } else {
@@ -3036,7 +3125,14 @@ function renderGuests() {
         brows += '<tr>' +
           '<td><span class="gs-side-badge ' + sideCls + '">' + (GS_SIDE_LABEL[b.side]||b.side) + '</span></td>' +
           '<td>' + b.label + (b.memo ? '<br><span style="font-size:10px;color:var(--text-l);">' + b.memo + '</span>' : '') + '</td>' +
-          '<td><span class="gs-bulk-count">' + (b.count||0) + '</span> 명</td>' +
+          '<td>' +
+            '<div class="gs-count-ctrl">' +
+              '<button class="gs-count-btn" onclick="updateBulkGuestCount(\'' + b.id + '\',-1)" title="감소">−</button>' +
+              '<span class="gs-bulk-count">' + (b.count||0) + '</span>' +
+              '<button class="gs-count-btn" onclick="updateBulkGuestCount(\'' + b.id + '\',1)" title="증가">+</button>' +
+              '<span style="font-size:11px;color:var(--text-l);margin-left:3px;">명</span>' +
+            '</div>' +
+          '</td>' +
           '<td><button class="gs-del-btn" onclick="deleteBulkGuest(\'' + b.id + '\')">삭제</button></td>' +
         '</tr>';
       });

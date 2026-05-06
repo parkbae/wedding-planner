@@ -466,6 +466,10 @@
               <option value="expense">📋 지출 내역</option>
               <option value="budget">💰 예산 플래너</option>
               <option value="todo">✅ 투두리스트</option>
+              <option value="summary">📊 요약</option>
+              <option value="vendors">📇 업체관리</option>
+              <option value="guests">👥 하객관리</option>
+              <option value="realestate">🏠 부동산</option>
               <option value="other">💡 기타</option>
             </select>
             <select class="req-form-select" id="req-urgent" style="max-width:110px;">
@@ -630,7 +634,7 @@
   <!-- TAB: 하객관리 -->
   <div class="main-panel" id="tab-guests">
 
-    <!-- 상단 요약 카드 5개 -->
+    <!-- 상단 요약 카드 6개 -->
     <div class="gs-summary-row">
       <div class="gs-sum-card">
         <div class="gs-sum-icon">👥</div>
@@ -646,6 +650,11 @@
         <div class="gs-sum-icon">👗</div>
         <div class="gs-sum-val" id="gs-cnt-bride">0</div>
         <div class="gs-sum-label">신부측</div>
+      </div>
+      <div class="gs-sum-card gs-sum-unassigned" id="gs-unassigned-card" style="display:none;">
+        <div class="gs-sum-icon">❓</div>
+        <div class="gs-sum-val" id="gs-cnt-unassigned">0</div>
+        <div class="gs-sum-label">기타 미지정</div>
       </div>
       <div class="gs-sum-card">
         <div class="gs-sum-icon">💌</div>

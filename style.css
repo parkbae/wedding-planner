@@ -769,3 +769,21 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   .gs-form-row{flex-direction:column;}
   .gs-table .gs-td-memo,.gs-table .gs-th-memo{display:none;}
 }
+
+/* gs 추가 스타일 — V2 */
+.gs-sum-unassigned{border-color:rgba(201,169,110,0.4);background:rgba(201,169,110,0.05);}
+.gs-sum-unassigned .gs-sum-val{color:var(--gold);}
+
+/* 인원 +/- 컨트롤 */
+.gs-count-ctrl{display:flex;align-items:center;gap:5px;}
+.gs-count-btn{background:white;border:1px solid var(--border);border-radius:6px;width:24px;height:24px;font-size:14px;font-weight:700;cursor:pointer;line-height:1;color:var(--navy);font-family:'Noto Sans KR',sans-serif;transition:all 0.15s;display:flex;align-items:center;justify-content:center;padding:0;}
+.gs-count-btn:hover{background:var(--navy);color:white;border-color:var(--navy);}
+
+/* 청첩장 모임 체크박스 (구분용 색상) */
+.gs-invite-meeting{accent-color:var(--rose);}
+
+/* 요청함 신규 카테고리 뱃지 */
+.rb-summary{background:rgba(44,49,73,0.1);color:var(--navy);}
+.rb-vendors{background:rgba(201,169,110,0.15);color:#8a6a2e;}
+.rb-guests{background:rgba(122,171,138,0.15);color:#4a8a5e;}
+.rb-realestate{background:rgba(139,159,201,0.15);color:#4a6da8;}
