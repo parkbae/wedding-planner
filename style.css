@@ -15,6 +15,72 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .header h1{font-family:'DM Serif Display',serif;font-size:32px;color:#fff;line-height:1.2;margin-bottom:6px;}
 .header h1 span{font-style:italic;color:var(--gold-light);}
 .header-sub{font-size:12px;color:rgba(255,255,255,0.45);font-weight:300;}
+.header-sub:hover { opacity: 0.75; text-decoration: underline; text-decoration-style: dotted; }
+.header-account-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+#header-account-badge {
+  font-size: 13px;
+  color: var(--gold-light);
+  font-weight: 600;
+}
+.header-account-email {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.header-account-plan {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  padding: 2px 8px;
+  letter-spacing: 0.5px;
+}
+.header-account-plan.plan-pro {
+  color: var(--gold);
+  background: rgba(201,169,110,0.18);
+}
+.header-action-btns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.hdr-btn {
+  border: none;
+  border-radius: 99px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.hdr-btn-gold {
+  background: rgba(201,169,110,0.15);
+  border: 1px solid rgba(201,169,110,0.4);
+  color: var(--gold-light);
+}
+.hdr-btn-gold:hover { background: rgba(201,169,110,0.28); }
+.hdr-btn-dim {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.45);
+}
+.hdr-btn-dim:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.1); }
+
 
 .container{max-width:1200px;margin:0 auto;padding:28px 16px 80px;}
 
@@ -843,6 +909,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   .header{padding:22px 0 18px;}
   .header h1{font-size:22px;}
   .header-sub{font-size:11px;}
+  .header-account-email{max-width:140px;}
+  .hdr-btn{padding:5px 11px;font-size:10px;}
 
   /* ── 3. 컨테이너 좌우 여백 축소 ── */
   .container{padding:18px 10px 80px;}

@@ -1136,7 +1136,7 @@ function calcNet() {
   // value가 없으면 기본값 사용 (스마트 폴백)
   const guestsVal = guestsEl ? guestsEl.value : '';
   const perGiftVal = perGiftEl ? perGiftEl.value : '';
-  const guests = guestsVal !== '' ? (parseFloat(guestsVal)||0) : 150;
+  const guests = guestsVal !== '' ? (parseFloat(guestsVal)||0) : 0;
   const perGift = perGiftVal !== '' ? (parseFloat(perGiftVal)||0) : 5;
   const totalGift = guests * perGift;
   const tg = document.getElementById('total-gift');
@@ -1681,11 +1681,15 @@ async function handleSignup() {
     if (pError) throw pError;
     // 4. 초기 플래너 데이터 저장
     await sbClient.from('planner_data').insert({ wedding_id: wedding.id, data: getDefaultData(), updated_by: userId });
-    await onLoginSuccess(authData.user);
-    // 초대 코드 표시
-    showInviteCode(inviteCode);
+    // RLS 재귀 방지: 가입 직후 자동 로그인 대신 완료 안내 후 수동 로그인 유도
+    switchAuthTab('login');
+    document.getElementById('auth-email').value = email;
+    showAuthError('🎉 가입 완료! 로그인 버튼을 눌러주세요. (초대코드: ' + inviteCode + ')');
+    document.getElementById('auth-error').style.color = 'var(--rose)';
+    // 초대 코드를 별도로 저장해 로그인 후 표시
+    window._pendingInviteCode = inviteCode;
   } catch(e) {
-    showAuthError(e.message.includes('already registered') ? '이미 가입된 이메일이에요.' : e.message);
+    showAuthError(e.message.includes('already registered') ? '이미 가입된 이메일이에요.' : (e.message.includes('security purposes') || e.message.includes('rate limit') ? '잠시 후 다시 시도해주세요. (약 30초 대기)' : e.message));
   }
 }
 
@@ -1731,9 +1735,20 @@ async function onLoginSuccess(user) {
     updateHeaderInfo(profile.weddings);
     // 유저 배지
     const badge = document.getElementById('user-badge');
-    if(badge) badge.textContent = `${profile.role==='groom'?'👔':'👗'} ${profile.name}`;
+    if(badge) badge.textContent = (profile.role==='groom'?'👔':'👗') + ' ' + profile.name;
     document.getElementById('user-status').style.display = 'flex';
     document.getElementById('partner-invite-btn').style.display = 'block';
+    // 헤더 계정 정보 표시
+    var headerBadge = document.getElementById('header-account-badge');
+    var headerEmail = document.getElementById('header-account-email');
+    var headerPlan = document.getElementById('header-account-plan');
+    if(headerBadge) headerBadge.textContent = (profile.role==='groom'?'👔':'👗') + ' ' + profile.name;
+    if(headerEmail) headerEmail.textContent = user.email || '';
+    if(headerPlan) {
+      var planLabel = (profile.plan === 'pro') ? 'PRO ✨' : 'FREE';
+      headerPlan.textContent = planLabel;
+      headerPlan.className = 'header-account-plan' + (profile.plan === 'pro' ? ' plan-pro' : '');
+    }
     // 최초 가입 여부 (venue 없으면 온보딩)
     if (!profile.weddings?.venue_name) {
       setTimeout(() => document.getElementById('onboarding-overlay').classList.add('open'), 500);
@@ -1742,6 +1757,11 @@ async function onLoginSuccess(user) {
     await loadFromSupabase();
     // Realtime 구독
     subscribeRealtime();
+    // 회원가입 후 대기 중인 초대코드 표시
+    if (window._pendingInviteCode) {
+      showInviteCode(window._pendingInviteCode);
+      window._pendingInviteCode = null;
+    }
   }
 }
 
@@ -1776,6 +1796,25 @@ async function completeOnboarding() {
 }
 function skipOnboarding() {
   document.getElementById('onboarding-overlay').classList.remove('open');
+}
+function openWeddingEdit() {
+  if (!currentWeddingId) return;
+  // 재진입 시 타이틀 변경
+  var titleEl = document.getElementById('onboard-title');
+  var descEl = document.getElementById('onboard-desc');
+  if (titleEl) titleEl.textContent = '웨딩 정보 수정';
+  if (descEl) descEl.textContent = '웨딩홀 이름과 예식일을 수정할 수 있어요';
+  // 현재 값 미리 채우기
+  sbClient && sbClient.from('weddings').select('venue_name,wedding_date')
+    .eq('id', currentWeddingId).single().then(function(res) {
+      var w = res.data;
+      if (!w) return;
+      var venueEl = document.getElementById('onboard-venue');
+      var dateEl = document.getElementById('onboard-date');
+      if (venueEl) venueEl.value = w.venue_name || '';
+      if (dateEl) dateEl.value = w.wedding_date ? w.wedding_date.split('T')[0] : '';
+    });
+  document.getElementById('onboarding-overlay').classList.add('open');
 }
 
 // ── 초대 코드 표시 ──
@@ -2504,6 +2543,12 @@ async function loadUserPlan(userId) {
   const { data } = await sbClient.from('profiles').select('plan').eq('id', userId).single();
   currentPlan = data?.plan || 'free';
   updatePlanUI();
+  // 헤더 plan 배지 갱신
+  var headerPlan = document.getElementById('header-account-plan');
+  if (headerPlan) {
+    headerPlan.textContent = currentPlan === 'pro' ? 'PRO ✨' : 'FREE';
+    headerPlan.className = 'header-account-plan' + (currentPlan === 'pro' ? ' plan-pro' : '');
+  }
 }
 
 // 플랜 UI 업데이트

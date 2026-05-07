@@ -143,8 +143,8 @@
 <div class="modal-overlay" id="onboarding-overlay">
   <div class="modal" style="width:380px;">
     <div style="text-align:center;margin-bottom:16px;font-size:32px;">💍</div>
-    <h3 style="text-align:center;margin-bottom:6px;">환영해요!</h3>
-    <p style="text-align:center;font-size:12px;color:var(--text-l);margin-bottom:20px;">결혼 준비 플래너를 시작해볼게요</p>
+    <h3 style="text-align:center;margin-bottom:6px;" id="onboard-title">환영해요!</h3>
+    <p style="text-align:center;font-size:12px;color:var(--text-l);margin-bottom:20px;" id="onboard-desc">결혼 준비 플래너를 시작해볼게요</p>
     <label style="display:block;font-size:11px;color:var(--text-l);margin-bottom:6px;">💒 웨딩홀 이름</label>
     <input type="text" id="onboard-venue" placeholder="예) 더세인트, 파라다이스 호텔..." style="margin-bottom:14px;">
     <label style="display:block;font-size:11px;color:var(--text-l);margin-bottom:6px;">📅 예식일</label>
@@ -254,10 +254,21 @@
   <div class="header-tag">✦ Wedding Planner 2026 ✦</div>
   <h1>우리의 결혼준비<br><span>예산 &amp; 투두 플래너</span></h1>
   <div class="header-sub" id="header-wedding-info">웨딩홀 · 날짜 미정 💍</div>
-  <div id="partner-invite-btn" style="display:none;margin-top:10px;">
-    <button onclick="openInviteShare()" style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.4);border-radius:99px;padding:6px 16px;font-size:11px;color:var(--gold-light);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;">
-      💌 파트너 초대하기
-    </button>
+
+  <!-- 로그인 후 계정/액션 영역 -->
+  <div id="partner-invite-btn" style="display:none;margin-top:14px;">
+    <!-- 계정 정보 표시 -->
+    <div class="header-account-info">
+      <span id="header-account-badge">👤</span>
+      <span id="header-account-email" class="header-account-email"></span>
+      <span id="header-account-plan" class="header-account-plan">FREE</span>
+    </div>
+    <!-- 액션 버튼 -->
+    <div class="header-action-btns">
+      <button class="hdr-btn hdr-btn-gold" onclick="openWeddingEdit()">✏️ 웨딩정보 수정</button>
+      <button class="hdr-btn hdr-btn-gold" onclick="openInviteShare()">💌 파트너 초대</button>
+      <button class="hdr-btn hdr-btn-dim" onclick="handleLogout()">로그아웃</button>
+    </div>
   </div>
 </div>
 
@@ -379,7 +390,7 @@
           </div>
           <div class="gc-row">
             <span class="gc-label">1인 평균 축의금</span>
-            <div><input class="gc-input" type="number" id="gift-per" value="5" oninput="calcNet()"> 만원</div>
+            <div><input class="gc-input" type="number" id="gift-per" value="" placeholder="5" oninput="calcNet()"> 만원</div>
           </div>
           <div class="gc-row">
             <span class="gc-label">예상 축의금 총액</span>
