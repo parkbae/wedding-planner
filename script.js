@@ -1677,7 +1677,7 @@ async function handleSignup() {
     if (wError) throw wError;
     // 3. Profile 생성
     const { error: pError } = await sbClient
-      .from('profiles').insert({ id: userId, role, wedding_id: wedding.id, name });
+      .from('profiles').insert({ id: userId, role, wedding_id: wedding.id, name, plan: DEFAULT_SIGNUP_PLAN });
     if (pError) throw pError;
     // 4. 초기 플래너 데이터 저장
     await sbClient.from('planner_data').insert({ wedding_id: wedding.id, data: getDefaultData(), updated_by: userId });
@@ -1708,7 +1708,7 @@ async function handleInviteJoin() {
     if (authError) throw authError;
     // 3. Profile 생성 (같은 wedding_id)
     const { error: pError } = await sbClient
-      .from('profiles').insert({ id: authData.user.id, role, wedding_id: wedding.id, name });
+      .from('profiles').insert({ id: authData.user.id, role, wedding_id: wedding.id, name, plan: DEFAULT_SIGNUP_PLAN });
     if (pError) throw pError;
     await onLoginSuccess(authData.user);
     showToast('💍 파트너와 연결됐어요!');
@@ -2488,6 +2488,10 @@ init();
 // ═══════════════════════════════════════════════
 // 플랜 & 수익화 시스템
 // ═══════════════════════════════════════════════
+// ── 베타 운영 기본 플랜 설정 ──
+// 베타 테스트 중: 'pro' / 실제 런칭 전: 'free' 로 변경
+const DEFAULT_SIGNUP_PLAN = 'pro';
+
 let currentPlan = 'free'; // 'free' | 'pro'
 
 // Supabase profiles 테이블에 plan 컬럼 추가 필요:
