@@ -5,70 +5,70 @@ const TAB_COLORS = ['#c9a96e','#c9837a','#7aab8a','#8b9fc9','#c9b87a','#a87ac9',
 // ── 지출 내역 데이터 (윤석/혜원 컬럼 제거) ──
 const defaultExpense = [
   { id:'s-wedding', name:'💒 본식', color:'#c9a96e', rows:[
-    {id:'r1',  name:'웨딩홀 대관료',       vendor:'더세인트', depositAmt:300, depositDate:'26.04.16', depositMode:'num', balanceAmt:400, balanceDate:'26.11.21', total:700,   pay:'카드', note:'계약금 300만원 카드 → 캐시백 51,000'},
-    {id:'r2',  name:'식대 (성인 150명)',    vendor:'더세인트', depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:1095,balanceDate:'26.11.21', total:1095,  pay:'카드', note:'73,000 × 150명'},
-    {id:'r3',  name:'식대 (소인)',           vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'44,000/인 (인원 미정)'},
-    {id:'r4',  name:'본식 스냅',             vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:150, balanceDate:'',          total:150,   pay:'',     note:''},
-    {id:'r5',  name:'본식 영상',             vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
-    {id:'r6',  name:'아이폰 스냅',           vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
-    {id:'r7',  name:'부케',                  vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
+    {id:'r1',  name:'웨딩홀 대관료',       vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r2',  name:'식대 (성인)',          vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r3',  name:'식대 (소인)',          vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r4',  name:'본식 스냅',            vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r5',  name:'본식 영상',            vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r6',  name:'아이폰 스냅',          vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r7',  name:'부케',                 vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
   ]},
   { id:'s-sdme', name:'📷 스드메', color:'#c9837a', rows:[
-    {id:'r10', name:'스튜디오/스냅',         vendor:'셀프진행', depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'셀프로 진행'},
-    {id:'r11', name:'드레스',                vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:100, balanceDate:'',          total:100,   pay:'',     note:''},
-    {id:'r12', name:'메이크업 (2인)',         vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:40,  balanceDate:'',          total:40,    pay:'',     note:''},
-    {id:'r13', name:'촬영부케',              vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:3,   balanceDate:'',          total:3,     pay:'',     note:''},
+    {id:'r10', name:'스튜디오/스냅',        vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r11', name:'드레스',               vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r12', name:'메이크업',             vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r13', name:'촬영부케',             vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
   ]},
   { id:'s-dress', name:'👗 드레스', color:'#8b9fc9', rows:[
-    {id:'r20', name:'투어/피팅 비용',        vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'샵 지정 방문하여 방어 예정'},
-    {id:'r21', name:'본식 헬퍼비',           vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:30,  balanceDate:'',          total:30,    pay:'현금', note:''},
-    {id:'r22', name:'추가금',                vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
+    {id:'r20', name:'투어/피팅 비용',       vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r21', name:'본식 헬퍼비',          vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r22', name:'추가금',               vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
   ]},
   { id:'s-suit', name:'🤵 예복', color:'#7ac9b8', rows:[
-    {id:'r30', name:'신랑 예복',             vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:50,  balanceDate:'',          total:50,    pay:'',     note:''},
+    {id:'r30', name:'신랑 예복',            vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
   ]},
   { id:'s-hanbok', name:'👘 혼주', color:'#c9b87a', rows:[
-    {id:'r40', name:'혼주 한복 (2인)',        vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:76,  balanceDate:'',          total:76,    pay:'',     note:'2인 × 38만원'},
-    {id:'r41', name:'혼주 메이크업 (3인)',    vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:53,  balanceDate:'',          total:53,    pay:'',     note:'2인 × 17.5 + 1인 × 7.5 (뒷가발 5.5 별도)'},
+    {id:'r40', name:'혼주 한복',            vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r41', name:'혼주 메이크업',        vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
   ]},
   { id:'s-gift', name:'💍 예물', color:'#a87ac9', rows:[
-    {id:'r50', name:'웨딩링',                vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
-    {id:'r51', name:'시계 / 주얼리',         vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
+    {id:'r50', name:'웨딩링',               vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r51', name:'시계 / 주얼리',        vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
   ]},
   { id:'s-meeting', name:'🍽 상견례', color:'#c97a9f', rows:[
-    {id:'r60', name:'부모님 인사',           vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:70,  balanceDate:'',          total:70,    pay:'',     note:''},
-    {id:'r61', name:'상견례',                vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:90,  balanceDate:'',          total:90,    pay:'',     note:''},
+    {id:'r60', name:'부모님 인사',          vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r61', name:'상견례',               vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
   ]},
   { id:'s-etc', name:'🎊 그 외', color:'#7aab8a', rows:[
-    {id:'r70', name:'사회자',                vendor:'웨딩홀 전문사회자', depositAmt:0, depositDate:'',   depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'웨딩홀 전문 사회자'},
-    {id:'r71', name:'축가',                  vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:30,  balanceDate:'',          total:30,    pay:'현금', note:''},
-    {id:'r72', name:'축의대',                vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:80,  balanceDate:'',          total:80,    pay:'',     note:'4인 × 20만원'},
-    {id:'r73', name:'웨딩카',                vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
-    {id:'r74', name:'식전영상',              vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:5,   balanceDate:'',          total:5,     pay:'',     note:''},
-    {id:'r75', name:'모바일 청첩장',          vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:10,  balanceDate:'',          total:10,    pay:'',     note:''},
-    {id:'r76', name:'청첩장 제작',           vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:10,  balanceDate:'',          total:10,    pay:'',     note:''},
-    {id:'r77', name:'청첩장 모임',           vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:900, balanceDate:'',          total:900,   pay:'',     note:''},
-    {id:'r78', name:'꾸밈비',                vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:90,  balanceDate:'',          total:90,    pay:'',     note:'3인 × 30만원'},
-    {id:'r79', name:'소개비',                vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:60,  balanceDate:'',          total:60,    pay:'',     note:'2인 × 30만원'},
+    {id:'r70', name:'사회자',               vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r71', name:'축가',                 vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r72', name:'축의대',               vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r73', name:'웨딩카',               vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r74', name:'식전영상',             vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r75', name:'모바일 청첩장',        vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r76', name:'청첩장 제작',          vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r77', name:'청첩장 모임',          vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r78', name:'꾸밈비',               vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r79', name:'소개비',               vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
   ]},
   { id:'s-honeymoon', name:'✈️ 신혼여행', color:'#6ab5c9', rows:[
-    {id:'r80', name:'신혼여행지',            vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
-    {id:'r81', name:'비행기 티켓',           vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
-    {id:'r82', name:'숙박',                  vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
-    {id:'r83', name:'신혼여행 환전',         vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
+    {id:'r80', name:'신혼여행지',           vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r81', name:'비행기 티켓',          vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r82', name:'숙박',                 vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r83', name:'신혼여행 환전',        vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
   ]},
   { id:'s-house', name:'🏠 신혼집', color:'#8b9fc9', rows:[
-    {id:'r90', name:'신혼집 보증금/매매',    vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
-    {id:'r91', name:'가전',                  vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
-    {id:'r92', name:'가구',                  vendor:'',         depositAmt:0,   depositDate:'',          depositMode:'none',balanceAmt:0,   balanceDate:'',          total:0,     pay:'',     note:'미정'},
+    {id:'r90', name:'신혼집 보증금/매매',   vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r91', name:'가전',                 vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
+    {id:'r92', name:'가구',                 vendor:'', depositAmt:0, depositDate:'', depositMode:'none', balanceAmt:0, balanceDate:'', total:0, pay:'', note:''},
   ]},
 ];
 
 const defaultBudgetTabs = [
   { id:'b-wedding', name:'💒 예식', tip:'예식장·스드메 추가금 별도. 총액 10% 예비비 필수!', limitPct:25,
-    items:[{id:'b1',name:'웨딩홀 대관료+식대',val:1795},{id:'b2',name:'스드메',val:143},{id:'b3',name:'본식 스냅·영상',val:150},{id:'b4',name:'한복·예복·혼주',val:129},{id:'b5',name:'예비비(10%)',val:0}]},
+    items:[{id:'b1',name:'웨딩홀 대관료+식대',val:0},{id:'b2',name:'스드메',val:0},{id:'b3',name:'본식 스냅·영상',val:0},{id:'b4',name:'한복·예복·혼주',val:0},{id:'b5',name:'예비비(10%)',val:0}]},
   { id:'b-etc', name:'🎊 부대비용', tip:'청첩장 모임 등 부대비용 미리 설정하세요.', limitPct:10,
-    items:[{id:'b6',name:'청첩장 모임',val:900},{id:'b7',name:'예물·예단',val:0},{id:'b8',name:'상견례',val:160},{id:'b9',name:'그외(축가·축의대 등)',val:185}]},
+    items:[{id:'b6',name:'청첩장 모임',val:0},{id:'b7',name:'예물·예단',val:0},{id:'b8',name:'상견례',val:0},{id:'b9',name:'그외(축가·축의대 등)',val:0}]},
   { id:'b-honeymoon', name:'✈️ 신혼여행', tip:'항공권은 4~6개월 전 예약 시 30~40% 절감!', limitPct:5,
     items:[{id:'b10',name:'항공+숙박',val:0},{id:'b11',name:'현지경비+환전',val:0}]},
   { id:'b-house', name:'🏠 신혼집', tip:'집 예산 10 : 결혼식 1~2 비율이 건강한 재정 구조!', limitPct:60,
@@ -103,7 +103,7 @@ const defaultTodoData = {
     {text:'웨딩플래너 vs 셀프 방식 결정',done:false},
   ]},
   d300:{label:'D-300~200 핵심계약',items:[
-    {text:'예식장 최종 결정 + 계약 (공정위 표준계약서!)',done:true},
+    {text:'예식장 최종 결정 + 계약 (공정위 표준계약서!)',done:false},
     {text:'스드메 계약 (추가금 없음 특약 기재 필수!)',done:false},
     {text:'본식 스냅·영상 작가 선정',done:false},
   ]},
@@ -1880,8 +1880,28 @@ function applyLoadedData(data) {
 }
 
 // ── 기본 데이터 (회원가입 시 초기화용) ──
+// 신규 유저에게 빈 템플릿을 Supabase에 저장한다.
+// buildSaveData()의 런타임 상태 대신 명시적 초기값을 반환.
 function getDefaultData() {
-  return buildSaveData();
+  var defaultTodo = {};
+  TODO_KEYS.forEach(function(k) {
+    defaultTodo[k] = JSON.parse(JSON.stringify(defaultTodoData[k].items));
+  });
+  return {
+    budget: { my: '', partner: '', family: '', loan: '' },
+    guests: '',
+    giftPer: '',
+    expenseSections: JSON.parse(JSON.stringify(defaultExpense)),
+    budgetTabs: JSON.parse(JSON.stringify(defaultBudgetTabs)),
+    activeBudgetTab: defaultBudgetTabs[0].id,
+    todoState: defaultTodo,
+    memos: [],
+    requests: [],
+    reProperties: [],
+    vendors: [],
+    guestState: { namedGuests: [], bulkCounts: [] },
+    savedAt: new Date().toLocaleString('ko-KR')
+  };
 }
 
 // ── 로그아웃 ──

@@ -109,7 +109,7 @@
     <div id="auth-signup-form" style="display:none">
       <input type="email" id="signup-email" placeholder="이메일" style="margin-bottom:10px;">
       <input type="password" id="signup-password" placeholder="비밀번호 (6자 이상)" style="margin-bottom:10px;">
-      <input type="text" id="signup-name" placeholder="이름 (예: 윤석)" style="margin-bottom:10px;">
+      <input type="text" id="signup-name" placeholder="이름 (예: 홍길동)" style="margin-bottom:10px;">
       <select id="signup-role" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:14px;color:var(--text);">
         <option value="groom">신랑 👔</option>
         <option value="bride">신부 👗</option>
@@ -251,7 +251,7 @@
 <div class="header">
   <div class="header-tag">✦ Wedding Planner 2026 ✦</div>
   <h1>우리의 결혼준비<br><span>예산 &amp; 투두 플래너</span></h1>
-  <div class="header-sub" id="header-wedding-info">더세인트 · 2026년 11월 21일 💍</div>
+  <div class="header-sub" id="header-wedding-info">웨딩홀 · 날짜 미정 💍</div>
   <div id="partner-invite-btn" style="display:none;margin-top:10px;">
     <button onclick="openInviteShare()" style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.4);border-radius:99px;padding:6px 16px;font-size:11px;color:var(--gold-light);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;">
       💌 파트너 초대하기
@@ -282,8 +282,8 @@
   <div class="budget-setup">
     <div class="section-label">✦ 총 예산 설정</div>
     <div class="budget-grid">
-      <div class="bi"><label>윤석 예산</label><div class="iw"><input type="number" id="my-savings" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
-      <div class="bi"><label>혜원 예산</label><div class="iw"><input type="number" id="partner-savings" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
+      <div class="bi"><label>신랑 예산</label><div class="iw"><input type="number" id="my-savings" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
+      <div class="bi"><label>신부 예산</label><div class="iw"><input type="number" id="partner-savings" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
       <div class="bi"><label>양가 지원액</label><div class="iw"><input type="number" id="family-support" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
       <div class="bi"><label>대출 한도</label><div class="iw"><input type="number" id="loan" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
     </div>
@@ -373,7 +373,7 @@
           <div class="gc-title">🎁 축의금 역산</div>
           <div class="gc-row">
             <span class="gc-label">예상 하객 수</span>
-            <div><input class="gc-input" type="number" id="guests" value="150" oninput="calcNet()"> 명</div>
+            <div><input class="gc-input" type="number" id="guests" value="" placeholder="0" oninput="calcNet()"> 명</div>
           </div>
           <div class="gc-row">
             <span class="gc-label">1인 평균 축의금</span>
