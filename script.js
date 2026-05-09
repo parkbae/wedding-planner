@@ -1914,6 +1914,9 @@ function applyLoadedData(data) {
   if (data.guestState) {
     if (Array.isArray(data.guestState.namedGuests)) guestState.namedGuests = data.guestState.namedGuests;
     if (Array.isArray(data.guestState.bulkCounts))  guestState.bulkCounts  = data.guestState.bulkCounts;
+    syncGuestIdCounter();
+    ensureUniqueGuestIds();
+    syncGuestIdCounter();
     renderGuests();
     syncGuestCountToSummary();
   }
@@ -2078,6 +2081,114 @@ let currentMainTab = 'tab-summary'; // 현재 활성 탭 추적
 
 // 메모 가시성 상태: 'all' | 'current' | 'hidden'
 let memoVisibility = 'hidden';
+
+// ── FAB 패널 접힘/펼침 토글 ──
+function toggleFabPanel() {
+  var body = document.getElementById('fab-panel-body');
+  var btn  = document.getElementById('fab-toggle-btn');
+  if (!body) return;
+  var isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (btn) btn.classList.toggle('open', !isOpen);
+}
+
+// 바깥 클릭 / ESC 시 FAB 패널 닫기
+document.addEventListener('click', function(e) {
+  var panel = document.getElementById('fab-panel');
+  var body  = document.getElementById('fab-panel-body');
+  if (!panel || !body) return;
+  if (body.style.display === 'none') return;
+  if (!panel.contains(e.target)) {
+    body.style.display = 'none';
+    var btn = document.getElementById('fab-toggle-btn');
+    if (btn) btn.classList.remove('open');
+  }
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var body = document.getElementById('fab-panel-body');
+    if (body && body.style.display !== 'none') {
+      body.style.display = 'none';
+      var btn = document.getElementById('fab-toggle-btn');
+      if (btn) btn.classList.remove('open');
+    }
+  }
+});
+
+// ── 하객 필터 상태 (2단: 측 / 그룹) ──
+var guestFilterState = { side: 'all', group: 'all' };
+
+// ── 1단: 측 필터 버튼 클릭 ──
+function applyGuestSideFilter(clickedBtn, side) {
+  guestFilterState.side = side;
+  // 측 버튼 active 갱신
+  var sideIds = ['gsqf-btn-all','gsqf-btn-groom','gsqf-btn-bride'];
+  for (var i = 0; i < sideIds.length; i++) {
+    var el = document.getElementById(sideIds[i]);
+    if (el) el.classList.remove('active');
+  }
+  if (clickedBtn) clickedBtn.classList.add('active');
+  // select 동기화
+  var selSide = document.getElementById('gs-filter-side');
+  if (selSide) selSide.value = side;
+  renderGuests();
+}
+
+// ── 2단: 그룹 필터 버튼 클릭 ──
+function applyGuestGroupFilter(clickedBtn, group) {
+  guestFilterState.group = group;
+  // 그룹 버튼 active-group 갱신
+  var grpIds = ['gsqf-btn-grp-all','gsqf-btn-grp-friend','gsqf-btn-grp-work','gsqf-btn-grp-family','gsqf-btn-grp-other'];
+  for (var i = 0; i < grpIds.length; i++) {
+    var el = document.getElementById(grpIds[i]);
+    if (el) el.classList.remove('active-group');
+  }
+  if (clickedBtn) clickedBtn.classList.add('active-group');
+  // select 동기화
+  var selGroup = document.getElementById('gs-filter-group');
+  if (selGroup) selGroup.value = group;
+  renderGuests();
+}
+
+// ── select 필터 변경 시 버튼 active 동기화 후 렌더 ──
+function applyGuestSelectFilter() {
+  var selSide  = document.getElementById('gs-filter-side');
+  var selGroup = document.getElementById('gs-filter-group');
+  var side  = selSide  ? (selSide.value  || 'all') : 'all';
+  var group = selGroup ? (selGroup.value || 'all') : 'all';
+  guestFilterState.side  = side;
+  guestFilterState.group = group;
+  // 측 버튼 active 동기화
+  var sideMap = { all:'gsqf-btn-all', groom:'gsqf-btn-groom', bride:'gsqf-btn-bride' };
+  var sideIds = ['gsqf-btn-all','gsqf-btn-groom','gsqf-btn-bride'];
+  for (var i = 0; i < sideIds.length; i++) {
+    var el = document.getElementById(sideIds[i]);
+    if (el) el.classList.remove('active');
+  }
+  var activeBtn = document.getElementById(sideMap[side] || 'gsqf-btn-all');
+  if (activeBtn) activeBtn.classList.add('active');
+  // 그룹 버튼 active-group 동기화
+  var grpMap = { all:'gsqf-btn-grp-all', friend:'gsqf-btn-grp-friend', work:'gsqf-btn-grp-work', family:'gsqf-btn-grp-family', other:'gsqf-btn-grp-other' };
+  var grpIds = ['gsqf-btn-grp-all','gsqf-btn-grp-friend','gsqf-btn-grp-work','gsqf-btn-grp-family','gsqf-btn-grp-other'];
+  for (var j = 0; j < grpIds.length; j++) {
+    var gel = document.getElementById(grpIds[j]);
+    if (gel) gel.classList.remove('active-group');
+  }
+  var activeGrpBtn = document.getElementById(grpMap[group] || 'gsqf-btn-grp-all');
+  if (activeGrpBtn) activeGrpBtn.classList.add('active-group');
+  renderGuests();
+}
+
+// 하위호환 — 이전 호출 코드에 대비 (내부적으로 새 구조로 위임)
+function applyGuestQuickFilter(clickedBtn, side, group) {
+  guestFilterState.side  = side;
+  guestFilterState.group = group;
+  var selSide  = document.getElementById('gs-filter-side');
+  var selGroup = document.getElementById('gs-filter-group');
+  if (selSide)  selSide.value  = side;
+  if (selGroup) selGroup.value = group;
+  renderGuests();
+}
 
 
 // ── FAB 메모 숨기기 드롭다운 토글 ──
@@ -2912,6 +3023,59 @@ function gsGenId() {
   return 'gs-' + guestIdCounter;
 }
 
+// ── guestIdCounter 동기화 (저장 데이터 복원 후 중복 id 방지) ──
+function syncGuestIdCounter() {
+  var max = 0;
+  if (guestState && Array.isArray(guestState.namedGuests)) {
+    guestState.namedGuests.forEach(function(g) {
+      if (g.id && typeof g.id === 'string' && g.id.indexOf('gs-') === 0) {
+        var n = parseInt(g.id.replace('gs-', ''), 10);
+        if (!isNaN(n) && n > max) max = n;
+      }
+    });
+  }
+  if (guestState && Array.isArray(guestState.bulkCounts)) {
+    guestState.bulkCounts.forEach(function(b) {
+      if (b.id && typeof b.id === 'string' && b.id.indexOf('gs-') === 0) {
+        var n = parseInt(b.id.replace('gs-', ''), 10);
+        if (!isNaN(n) && n > max) max = n;
+      }
+    });
+  }
+  if (max > guestIdCounter) guestIdCounter = max;
+}
+
+// ── 기존 namedGuests 중복 id 정리 (저장 복원 후 1회 실행) ──
+function ensureUniqueGuestIds() {
+  var usedIds = new Set();
+  // bulkCounts id를 먼저 점유 — 새 namedGuest id가 겹치지 않도록
+  if (guestState && Array.isArray(guestState.bulkCounts)) {
+    guestState.bulkCounts.forEach(function(b) {
+      if (b.id) usedIds.add(b.id);
+    });
+  }
+  if (!guestState || !Array.isArray(guestState.namedGuests)) return;
+  var fixed = 0;
+  guestState.namedGuests.forEach(function(g) {
+    if (!g.id || usedIds.has(g.id)) {
+      // 새 id 발급 — 이미 사용 중인 id는 건너뜀
+      var newId;
+      do {
+        newId = gsGenId();
+      } while (usedIds.has(newId));
+      g.id = newId;
+      fixed++;
+    }
+    usedIds.add(g.id);
+  });
+  if (fixed > 0) {
+    console.warn('[GuestID] 중복/누락 id ' + fixed + '개를 정리했습니다.');
+    if (typeof showToast === 'function') {
+      showToast('중복 하객 ID를 정리했어요. 저장 버튼을 눌러 확정해주세요.');
+    }
+  }
+}
+
 // ── 폼 토글 ──
 function toggleGuestForm(type) {
   var wrapId = type === 'named' ? 'gs-named-form-wrap' : 'gs-bulk-form-wrap';
@@ -3030,6 +3194,53 @@ function deleteNamedGuest(id) {
   showToast('삭제됐어요');
 }
 
+// ── 하객 정보 수정 모달 ──
+var _guestEditTargetId = null;
+
+function openGuestEditModal(id) {
+  var g = guestState.namedGuests.find(function(x){ return x.id === id; });
+  if (!g) return;
+  _guestEditTargetId = id;
+  var selSide  = document.getElementById('gs-edit-side');
+  var selGroup = document.getElementById('gs-edit-group');
+  var inpName  = document.getElementById('gs-edit-name');
+  var inpMemo  = document.getElementById('gs-edit-memo');
+  if (selSide)  selSide.value  = g.side  || 'groom';
+  if (selGroup) selGroup.value = g.group || 'other';
+  if (inpName)  inpName.value  = g.name  || '';
+  if (inpMemo)  inpMemo.value  = g.memo  || '';
+  var overlay = document.getElementById('gs-edit-modal-overlay');
+  if (overlay) overlay.style.display = 'flex';
+  if (inpName) inpName.focus();
+}
+
+function closeGuestEditModal() {
+  _guestEditTargetId = null;
+  var overlay = document.getElementById('gs-edit-modal-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function saveGuestEdit() {
+  var name = (document.getElementById('gs-edit-name') ? document.getElementById('gs-edit-name').value : '').trim();
+  if (!name) { showToast('이름을 입력해주세요'); return; }
+  if (!_guestEditTargetId) return;
+  var g = guestState.namedGuests.find(function(x){ return x.id === _guestEditTargetId; });
+  if (!g) return;
+  var selSide  = document.getElementById('gs-edit-side');
+  var selGroup = document.getElementById('gs-edit-group');
+  var inpMemo  = document.getElementById('gs-edit-memo');
+  // id / rsvp / 청첩장 체크 필드는 그대로 유지, 수정 4개 필드만 교체
+  g.side  = selSide  ? selSide.value  : g.side;
+  g.group = selGroup ? selGroup.value : g.group;
+  g.name  = name;
+  g.memo  = inpMemo ? (inpMemo.value || '').trim() : (g.memo || '');
+  closeGuestEditModal();
+  renderGuests();
+  syncGuestCountToSummary();
+  saveAll();
+  showToast('✏️ 수정됐어요!');
+}
+
 // ── 숫자 입력 하객 삭제 ──
 function deleteBulkGuest(id) {
   if (!confirm('이 항목을 삭제할까요?')) return;
@@ -3050,6 +3261,9 @@ function migrateGuestFields() {
     if (typeof g.mobileInviteSent === 'undefined')  { g.mobileInviteSent  = false; }
     if (typeof g.inviteMeetingDone === 'undefined')  { g.inviteMeetingDone = false; }
   });
+  syncGuestIdCounter();
+  ensureUniqueGuestIds();
+  syncGuestIdCounter();
 }
 
 // ── 관리 하객 수 계산 (managedGuestCount) ──
@@ -3114,6 +3328,20 @@ function renderGuests() {
   setEl('gs-cnt-attending',attendingCount);
   setEl('gs-cnt-unassigned', unassigned);
 
+  // ── 빠른 필터 버튼 카운트 갱신 (namedGuests 기준, bulkCounts 제외) ──
+  var ng = guestState.namedGuests;
+  setEl('gsqf-all',    ng.length);
+  setEl('gsqf-groom',  ng.filter(function(g){ return g.side === 'groom'; }).length);
+  setEl('gsqf-bride',  ng.filter(function(g){ return g.side === 'bride'; }).length);
+  // 2단 그룹 카운트: 현재 선택된 측 기준으로 계산
+  var curSide = guestFilterState ? guestFilterState.side : 'all';
+  var ngForGroup = curSide === 'all' ? ng : ng.filter(function(g){ return g.side === curSide; });
+  setEl('gsqf-grp-all',    ngForGroup.length);
+  setEl('gsqf-grp-friend', ngForGroup.filter(function(g){ return g.group === 'friend'; }).length);
+  setEl('gsqf-grp-work',   ngForGroup.filter(function(g){ return g.group === 'work'; }).length);
+  setEl('gsqf-grp-family', ngForGroup.filter(function(g){ return g.group === 'family'; }).length);
+  setEl('gsqf-grp-other',  ngForGroup.filter(function(g){ return g.group === 'other'; }).length);
+
   // 기타 미지정 카드 표시 제어
   var unassignedCard = document.getElementById('gs-unassigned-card');
   if (unassignedCard) unassignedCard.style.display = unassigned > 0 ? '' : 'none';
@@ -3121,8 +3349,10 @@ function renderGuests() {
   // ── 직접 입력 리스트 ──
   var namedList = document.getElementById('gs-named-list');
   if (namedList) {
-    var filterSide  = (document.getElementById('gs-filter-side') ? document.getElementById('gs-filter-side').value : 'all') || 'all';
-    var filterGroup = (document.getElementById('gs-filter-group') ? document.getElementById('gs-filter-group').value : 'all') || 'all';
+    // guestFilterState 우선 참조, 없으면 select에서 폴백
+    // guestFilterState를 단일 소스로 사용 (select 폴백 제거 — 동기화 혼선 방지)
+    var filterSide  = (guestFilterState && guestFilterState.side)  ? guestFilterState.side  : 'all';
+    var filterGroup = (guestFilterState && guestFilterState.group) ? guestFilterState.group : 'all';
 
     var filtered = guestState.namedGuests.filter(function(g) {
       var okSide  = filterSide  === 'all' || g.side  === filterSide;
@@ -3167,13 +3397,16 @@ function renderGuests() {
               '<option value="declined"'  + (g.rsvp==='declined' ?' selected':'') + '>❌ 불참</option>' +
             '</select>' +
           '</td>' +
-          '<td><button class="gs-del-btn" onclick="deleteNamedGuest(\'' + g.id + '\')">삭제</button></td>' +
+          '<td>' +
+            '<button class="gs-edit-btn" onclick="openGuestEditModal(\'' + g.id + '\')">수정</button>' +
+            '<button class="gs-del-btn" onclick="deleteNamedGuest(\'' + g.id + '\')">삭제</button>' +
+          '</td>' +
         '</tr>';
       });
       namedList.innerHTML =
         '<table class="gs-table">' +
           '<thead><tr>' +
-            '<th>측</th><th>그룹</th><th>이름 / 메모</th>' +
+            '<th>구분</th><th>관계</th><th>이름 / 메모</th>' +
             '<th style="text-align:center;" title="실물 청첩장">실물</th>' +
             '<th style="text-align:center;" title="모바일 청첩장">모바일</th>' +
             '<th style="text-align:center;" title="청첩장 모임">모임</th>' +

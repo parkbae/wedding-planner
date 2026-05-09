@@ -10,9 +10,17 @@
   <div class="last-saved" id="last-saved"></div>
 
   <!-- 통합 FAB 패널 -->
-  <div class="fab-panel">
+  <div class="fab-panel" id="fab-panel">
+    <!-- FAB 토글 버튼 (항상 표시) -->
+    <button class="fab-toggle-btn" id="fab-toggle-btn" onclick="toggleFabPanel()" title="작업 패널 열기/닫기">
+      <span id="fab-toggle-icon">⚙️</span>
+    </button>
+
+    <!-- FAB 패널 본문 (접힘/펼침 대상) -->
+    <div class="fab-panel-body" id="fab-panel-body" style="display:none;">
+
     <!-- 유저 정보 (로그인 시) -->
-    <div class="fab-user-row" id="user-status" style="display:none">
+    <div class="fab-user-row" id="user-status" style="display:none;">
       <span class="fab-user-name" id="user-badge">👤</span>
       <button class="fab-logout-btn" onclick="handleLogout()">로그아웃</button>
     </div>
@@ -64,7 +72,7 @@
       </button>
 
       <!-- 초기화 (숨김 처리 — resetAll 함수는 유지) -->
-      <button class="fab-action-btn" onclick="resetAll()" title="데이터 초기화" style="display:none">
+      <button class="fab-action-btn" onclick="resetAll()" title="데이터 초기화" style="display:none;">
         <span class="fab-action-icon">🗑</span>
         <span class="fab-action-label">초기화</span>
       </button>
@@ -86,6 +94,7 @@
     <!-- 복구용 숨김 파일 인풋 -->
     <input type="file" id="restore-file-input" accept=".json" style="display:none" onchange="restoreData(this)">
 
+    </div><!-- /fab-panel-body -->
   </div>
 </div>
 
@@ -701,9 +710,9 @@
     <div class="card">
       <div class="card-header">
         <span class="card-title">➕ 직접 입력 하객 추가</span>
-        <button class="gs-form-toggle-btn" onclick="toggleGuestForm('named')" id="gs-named-toggle-btn">폼 펼치기 ▾</button>
+        <button class="gs-form-toggle-btn" onclick="toggleGuestForm('named')" id="gs-named-toggle-btn">폼 접기 ▴</button>
       </div>
-      <div class="card-body" id="gs-named-form-wrap" style="display:none;">
+      <div class="card-body" id="gs-named-form-wrap" style="display:block;">
         <div class="gs-form-row">
           <div class="gs-form-group">
             <label class="gs-form-label">신랑 / 신부측</label>
@@ -740,9 +749,9 @@
     <div class="card">
       <div class="card-header">
         <span class="card-title">🔢 숫자 입력 하객 추가</span>
-        <button class="gs-form-toggle-btn" onclick="toggleGuestForm('bulk')" id="gs-bulk-toggle-btn">폼 펼치기 ▾</button>
+        <button class="gs-form-toggle-btn" onclick="toggleGuestForm('bulk')" id="gs-bulk-toggle-btn">폼 접기 ▴</button>
       </div>
-      <div class="card-body" id="gs-bulk-form-wrap" style="display:none;">
+      <div class="card-body" id="gs-bulk-form-wrap" style="display:block;">
         <div class="gs-form-row">
           <div class="gs-form-group">
             <label class="gs-form-label">신랑 / 신부측</label>
@@ -775,18 +784,37 @@
       <div class="card-header">
         <span class="card-title">📋 직접 입력 하객 목록</span>
         <div style="display:flex;gap:8px;align-items:center;">
-          <select class="gs-filter-select" id="gs-filter-side" onchange="renderGuests()">
+          <select class="gs-filter-select" id="gs-filter-side" onchange="applyGuestSelectFilter()">
             <option value="all">전체</option>
             <option value="groom">신랑측</option>
             <option value="bride">신부측</option>
           </select>
-          <select class="gs-filter-select" id="gs-filter-group" onchange="renderGuests()">
+          <select class="gs-filter-select" id="gs-filter-group" onchange="applyGuestSelectFilter()">
             <option value="all">전체 그룹</option>
             <option value="family">가족</option>
             <option value="friend">친구</option>
             <option value="work">직장</option>
             <option value="other">기타</option>
           </select>
+        </div>
+      </div>
+      <!-- 빠른 필터 버튼 바 (2단: 측 / 그룹) -->
+      <div class="gs-quick-filter-bar" id="gs-quick-filter-bar">
+        <!-- 1단: 측 필터 -->
+        <div class="gs-qf-row" id="gs-qf-row-side">
+          <span class="gs-qf-label">구분</span>
+          <button class="gs-qf-btn active" id="gsqf-btn-all"   onclick="applyGuestSideFilter(this,'all')">전체 <span id="gsqf-all">0</span>명</button>
+          <button class="gs-qf-btn"        id="gsqf-btn-groom" onclick="applyGuestSideFilter(this,'groom')">신랑측 <span id="gsqf-groom">0</span>명</button>
+          <button class="gs-qf-btn"        id="gsqf-btn-bride" onclick="applyGuestSideFilter(this,'bride')">신부측 <span id="gsqf-bride">0</span>명</button>
+        </div>
+        <!-- 2단: 그룹 필터 -->
+        <div class="gs-qf-row" id="gs-qf-row-group">
+          <span class="gs-qf-label">관계</span>
+          <button class="gs-qf-btn active-group" id="gsqf-btn-grp-all"    onclick="applyGuestGroupFilter(this,'all')">전체 <span id="gsqf-grp-all">0</span>명</button>
+          <button class="gs-qf-btn"              id="gsqf-btn-grp-friend" onclick="applyGuestGroupFilter(this,'friend')">친구 <span id="gsqf-grp-friend">0</span>명</button>
+          <button class="gs-qf-btn"              id="gsqf-btn-grp-work"   onclick="applyGuestGroupFilter(this,'work')">직장 <span id="gsqf-grp-work">0</span>명</button>
+          <button class="gs-qf-btn"              id="gsqf-btn-grp-family" onclick="applyGuestGroupFilter(this,'family')">가족 <span id="gsqf-grp-family">0</span>명</button>
+          <button class="gs-qf-btn"              id="gsqf-btn-grp-other"  onclick="applyGuestGroupFilter(this,'other')">기타 <span id="gsqf-grp-other">0</span>명</button>
         </div>
       </div>
       <div class="card-body">
@@ -989,6 +1017,43 @@
     <div class="autosave-modal-footer">
       <button class="autosave-refresh-btn" onclick="loadAutoBackupList()">🔄 새로고침</button>
       <button class="modal-cancel" onclick="closeAutoBackupModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 하객 정보 수정 모달 ── -->
+<div class="modal-overlay" id="gs-edit-modal-overlay" onclick="if(event.target===this)closeGuestEditModal()">
+  <div class="modal gs-edit-modal">
+    <h3 class="gs-edit-modal-title">✏️ 하객 정보 수정</h3>
+    <div class="gs-edit-form">
+      <div class="gs-edit-row">
+        <label class="gs-edit-label">구분</label>
+        <select class="gs-edit-input" id="gs-edit-side">
+          <option value="groom">신랑측</option>
+          <option value="bride">신부측</option>
+        </select>
+      </div>
+      <div class="gs-edit-row">
+        <label class="gs-edit-label">관계</label>
+        <select class="gs-edit-input" id="gs-edit-group">
+          <option value="family">👨‍👩‍👧 가족</option>
+          <option value="friend">🤝 친구</option>
+          <option value="work">💼 직장</option>
+          <option value="other">📌 기타</option>
+        </select>
+      </div>
+      <div class="gs-edit-row">
+        <label class="gs-edit-label">이름 <span class="gs-edit-required">*</span></label>
+        <input class="gs-edit-input" type="text" id="gs-edit-name" placeholder="이름을 입력하세요" onkeydown="if(event.key==='Enter')saveGuestEdit()">
+      </div>
+      <div class="gs-edit-row">
+        <label class="gs-edit-label">메모</label>
+        <input class="gs-edit-input" type="text" id="gs-edit-memo" placeholder="메모 (선택)" onkeydown="if(event.key==='Enter')saveGuestEdit()">
+      </div>
+    </div>
+    <div class="gs-edit-btns">
+      <button class="modal-cancel" onclick="closeGuestEditModal()">취소</button>
+      <button class="modal-confirm gs-edit-save-btn" onclick="saveGuestEdit()">저장</button>
     </div>
   </div>
 </div>
