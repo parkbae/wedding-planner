@@ -3214,3 +3214,123 @@ function renderGuests() {
     }
   }
 }
+
+// ═══════════════════════════════════════════════
+// 📥 백업 / 복구 기능
+// ═══════════════════════════════════════════════
+
+// ── 백업: 현재 앱 데이터를 JSON 파일로 다운로드 ──
+function backupData() {
+  var data = buildSaveData();
+  var now = new Date();
+  var yyyy = now.getFullYear();
+  var mm = String(now.getMonth() + 1).padStart(2, '0');
+  var dd = String(now.getDate()).padStart(2, '0');
+  var hh = String(now.getHours()).padStart(2, '0');
+  var min = String(now.getMinutes()).padStart(2, '0');
+  var filename = 'wedding_planner_backup_' + yyyy + mm + dd + '_' + hh + min + '.json';
+
+  var payload = {
+    _meta: {
+      app: 'wedding_planner',
+      version: 'v4',
+      backupAt: now.toLocaleString('ko-KR'),
+      storageKey: STORAGE_KEY
+    },
+    data: data
+  };
+
+  var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('📥 백업 파일이 다운로드됐어요!');
+}
+
+// ── 복구: 파일 선택 트리거 ──
+function triggerRestoreFile() {
+  var input = document.getElementById('restore-file-input');
+  if (input) {
+    input.value = '';  // 같은 파일 재선택 허용
+    input.click();
+  }
+}
+
+// ── 복구: JSON 파일 읽기 및 검증 → 적용 ──
+function restoreData(inputEl) {
+  var file = inputEl.files && inputEl.files[0];
+  if (!file) return;
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var raw = e.target.result;
+    var parsed;
+
+    // 1. JSON 파싱 검증
+    try {
+      parsed = JSON.parse(raw);
+    } catch (err) {
+      alert('❌ 복구 실패: 유효하지 않은 JSON 파일이에요.\n\n' + err.message);
+      return;
+    }
+
+    // 2. 구조 검증: _meta 또는 data 키 확인
+    var restoreTarget;
+    if (parsed._meta && parsed.data) {
+      // 새 백업 포맷 (wrapper 포함)
+      if (parsed._meta.app !== 'wedding_planner') {
+        alert('❌ 복구 실패: 이 앱의 백업 파일이 아니에요.\n\n앱 식별자: ' + parsed._meta.app);
+        return;
+      }
+      restoreTarget = parsed.data;
+    } else if (parsed.budget || parsed.expenseSections) {
+      // 구 포맷 (buildSaveData 직접 저장 형태) 허용
+      restoreTarget = parsed;
+    } else {
+      alert('❌ 복구 실패: 웨딩 플래너 백업 파일 구조를 인식할 수 없어요.\n\n필수 필드(budget 또는 expenseSections)가 없습니다.');
+      return;
+    }
+
+    // 3. 필수 키 존재 검증
+    var requiredKeys = ['budget', 'expenseSections', 'budgetTabs', 'todoState'];
+    var missingKeys = requiredKeys.filter(function(k) { return !restoreTarget[k]; });
+    if (missingKeys.length > 0) {
+      alert('❌ 복구 실패: 필수 데이터 누락\n\n누락 항목: ' + missingKeys.join(', '));
+      return;
+    }
+
+    // 4. 복구 전 confirm 경고
+    var savedAtInfo = restoreTarget.savedAt ? '\n\n📅 백업 저장 시점: ' + restoreTarget.savedAt : '';
+    var metaInfo = parsed._meta ? '\n📅 백업 생성 일시: ' + parsed._meta.backupAt : '';
+    var confirmed = confirm(
+      '⚠️ 데이터 복구 확인\n\n' +
+      '백업 파일로 현재 앱 데이터를 교체합니다.\n' +
+      '복구 후에는 저장 버튼을 눌러야 클라우드에 반영됩니다.' +
+      savedAtInfo + metaInfo + '\n\n' +
+      '계속할까요?'
+    );
+    if (!confirmed) {
+      showToast('복구가 취소됐어요.');
+      return;
+    }
+
+    // 5. 데이터 적용 (saveAll 호출 없음 — 사용자가 저장 버튼 눌러야 반영)
+    try {
+      applyLoadedData(restoreTarget);
+      showToast('✅ 복구됐어요! 저장 버튼을 눌러 확정하세요.');
+    } catch (applyErr) {
+      alert('❌ 복구 중 오류가 발생했어요.\n\n' + applyErr.message);
+    }
+  };
+
+  reader.onerror = function() {
+    alert('❌ 파일을 읽는 중 오류가 발생했어요.');
+  };
+
+  reader.readAsText(file, 'utf-8');
+}

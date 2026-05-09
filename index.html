@@ -70,6 +70,19 @@
       </button>
 
     </div>
+
+    <!-- 백업/복구 버튼 행 -->
+    <div class="fab-backup-row">
+      <button class="fab-backup-btn" onclick="backupData()" title="JSON 파일로 백업">
+        <span>📥</span> 백업
+      </button>
+      <button class="fab-backup-btn fab-restore-btn" onclick="triggerRestoreFile()" title="JSON 파일로 복구">
+        <span>📤</span> 복구
+      </button>
+    </div>
+    <!-- 복구용 숨김 파일 인풋 -->
+    <input type="file" id="restore-file-input" accept=".json" style="display:none" onchange="restoreData(this)">
+
   </div>
 </div>
 

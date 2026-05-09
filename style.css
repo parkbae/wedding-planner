@@ -450,6 +450,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .fab-action-btn:not(:last-child){border-right:1px solid var(--border);}
 .fab-action-icon{font-size:15px;line-height:1;}
 .fab-action-label{font-size:10px;font-weight:500;white-space:normal;word-break:keep-all;text-align:center;display:block;line-height:1.3;}
+/* 백업/복구 행 */
+.fab-backup-row{display:flex;border-top:1px solid var(--border);gap:0;}
+.fab-backup-btn{flex:1;background:none;border:none;cursor:pointer;
+  padding:9px 6px;font-size:11px;font-weight:600;color:var(--text-l);
+  font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;
+  display:flex;align-items:center;justify-content:center;gap:4px;}
+.fab-backup-btn:hover{background:#f0fdf4;color:#16a34a;}
+.fab-backup-btn:not(:last-child){border-right:1px solid var(--border);}
+.fab-restore-btn:hover{background:#fff7ed;color:#d97706;}
 /* 메모 드롭다운 */
 .fab-memo-group{position:relative;flex:1;display:flex;flex-direction:column;align-items:stretch;}
 .fab-memo-dropdown{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
