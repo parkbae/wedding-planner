@@ -929,16 +929,37 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 
   /* ── 1. 메인 탭 영역 ── */
   .main-tabs{
+    display:flex;
+    flex-wrap:nowrap;              /* ★ 줄바꿈 완전 차단 */
+    align-items:center;            /* ★ 수직 중앙 고정 */
     overflow-x:auto;
+    overflow-y:hidden;             /* ★ Y축 스크롤/흔들림 차단 */
     -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;          /* Firefox */
-    padding-bottom:1px;            /* 하단 border 잘림 방지 */
+    scrollbar-width:none;          /* Firefox 스크롤바 숨김 */
+    height:44px;                   /* ★ 컨테이너 높이 고정 */
+    padding-bottom:0;              /* 고정 높이 사용으로 padding 제거 */
+    border-bottom:2px solid var(--border); /* PC 스타일 유지 */
+    margin-bottom:16px;
   }
-  .main-tabs::-webkit-scrollbar{display:none;}
+  .main-tabs::-webkit-scrollbar{display:none;}   /* Chrome/Safari 스크롤바 숨김 */
   .main-tab{
-    padding:11px 14px;
+    flex:0 0 auto;                 /* ★ 너비 자동 고정, 절대 축소 금지 */
+    padding:0 14px;                /* ★ 상하 padding 제거 → line-height로 높이 통일 */
+    height:44px;                   /* ★ 탭 버튼 높이 컨테이너와 동일하게 고정 */
+    line-height:44px;              /* ★ 텍스트 수직 중앙 고정 */
     font-size:12px;
-    flex-shrink:0;                 /* 탭 텍스트 절대 줄바꿈/잘림 방지 */
+    white-space:nowrap;
+    border-bottom:3px solid transparent;
+    margin-bottom:-2px;
+    box-sizing:border-box;
+  }
+  .main-tab.active{
+    border-bottom-color:var(--gold);
+    font-weight:700;
+    /* ★ font-weight 변화로 인한 너비 변동이 높이에 영향 없도록 height/line-height 고정 유지 */
+    height:44px;
+    line-height:44px;
+    padding:0 14px;
   }
 
   /* ── 2. 헤더 ── */
