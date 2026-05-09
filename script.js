@@ -1757,6 +1757,8 @@ async function onLoginSuccess(user) {
     await loadFromSupabase();
     // Realtime 구독
     subscribeRealtime();
+    // 자동 임시백업 인터벌 시작 (pro 여부는 saveAutoBackup 내부에서 재확인)
+    startAutoBackup();
     // 회원가입 후 대기 중인 초대코드 표시
     if (window._pendingInviteCode) {
       showInviteCode(window._pendingInviteCode);
@@ -1946,6 +1948,7 @@ function getDefaultData() {
 // ── 로그아웃 ──
 async function handleLogout() {
   if (!confirm('로그아웃할까요?')) return;
+  stopAutoBackup();
   if (sbClient) {
     if (realtimeChannel) sbClient.removeChannel(realtimeChannel);
     await sbClient.auth.signOut();
@@ -2033,6 +2036,7 @@ async function saveAll() {
       }
 
       const ok = await saveToSupabase();
+      if (ok) isRestoredPending = false;
       showToast(ok ? '☁️ 클라우드 저장됐어요!' : '💾 로컬 저장됐어요 (네트워크 오류)');
     } else {
       showToast('💾 로컬 저장됐어요 (☁️ 클라우드 저장은 PRO 전용)');
@@ -3322,6 +3326,7 @@ function restoreData(inputEl) {
     // 5. 데이터 적용 (saveAll 호출 없음 — 사용자가 저장 버튼 눌러야 반영)
     try {
       applyLoadedData(restoreTarget);
+      isRestoredPending = true;
       showToast('✅ 복구됐어요! 저장 버튼을 눌러 확정하세요.');
     } catch (applyErr) {
       alert('❌ 복구 중 오류가 발생했어요.\n\n' + applyErr.message);
@@ -3333,4 +3338,259 @@ function restoreData(inputEl) {
   };
 
   reader.readAsText(file, 'utf-8');
+}
+
+// ════════════════════════════════════════════════════════════
+// ☁️ 서버 자동 임시백업 (planner_autosaves)
+// - planner_data(공식 저장본)는 절대 건드리지 않음
+// - saveAll()과 완전히 독립된 별도 레이어
+// ════════════════════════════════════════════════════════════
+
+// ── 자동백업 상태 변수 ──
+var autoBackupInterval = null;
+var lastAutoBackupHash = null;
+var isRestoredPending = false;
+var AUTO_BACKUP_INTERVAL_MS = 30 * 60 * 1000; // 30분
+var AUTO_BACKUP_KEEP_COUNT = 10;
+
+// ── 해시 생성 (변경 감지용) ──
+function simpleHash(str) {
+  var h = 0;
+  for (var i = 0; i < str.length; i++) {
+    h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+  }
+  return h.toString(36);
+}
+
+// ── 해시 비교용 스냅샷 (savedAt 등 매번 바뀌는 값 제외) ──
+function getBackupComparableData(snapshot) {
+  var comparable = {};
+  var keys = Object.keys(snapshot);
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i];
+    if (k !== 'savedAt') {
+      comparable[k] = snapshot[k];
+    }
+  }
+  return comparable;
+}
+
+// ── 백업 유효성 검사 (빈 상태/로드 실패 방지) ──
+function isValidBackupData(data) {
+  if (!data) return false;
+  if (!data.budget || typeof data.budget !== 'object') return false;
+  if (!Array.isArray(data.expenseSections) || data.expenseSections.length === 0) return false;
+  if (!Array.isArray(data.budgetTabs) || data.budgetTabs.length === 0) return false;
+  if (!data.todoState || typeof data.todoState !== 'object') return false;
+  if (!currentWeddingId) return false;
+  if (currentPlan !== 'pro') return false;
+  return true;
+}
+
+// ── 자동백업 실행 ──
+async function saveAutoBackup() {
+  // Guard 1~4: 기본 환경 검사
+  if (!currentUser) return;
+  if (!currentWeddingId) return;
+  if (currentPlan !== 'pro') return;
+  if (!sbClient) return;
+
+  // Guard 7: 복구 직후 미확정 상태이면 백업 금지
+  if (isRestoredPending === true) {
+    console.log('[AutoBackup] 복구 직후 미확정 상태 — 스킵');
+    return;
+  }
+
+  // Guard 5+8: 필수 데이터 구조 + 빈 상태 검사
+  var snapshot;
+  try {
+    snapshot = buildSaveData();
+  } catch (e) {
+    console.warn('[AutoBackup] buildSaveData 실패 — 스킵', e);
+    return;
+  }
+  if (!isValidBackupData(snapshot)) {
+    console.log('[AutoBackup] 유효하지 않은 데이터 상태 — 스킵');
+    return;
+  }
+
+  // Guard 6: 마지막 백업 이후 변경 여부 확인
+  var comparable = getBackupComparableData(snapshot);
+  var currentHash = simpleHash(JSON.stringify(comparable));
+  if (currentHash === lastAutoBackupHash) {
+    console.log('[AutoBackup] 변경 없음 — 스킵');
+    return;
+  }
+
+  // 라벨 생성
+  var now = new Date();
+  var labelStr = now.toLocaleDateString('ko-KR', {month:'numeric', day:'numeric'})
+    + ' ' + now.toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+
+  try {
+    // INSERT
+    var insertRes = await sbClient.from('planner_autosaves').insert({
+      wedding_id: currentWeddingId,
+      saved_by: currentUser.id,
+      data: snapshot,
+      data_hash: currentHash,
+      label: '자동백업 · ' + labelStr
+    });
+
+    if (insertRes.error) {
+      console.warn('[AutoBackup] INSERT 실패:', insertRes.error.message);
+      return;
+    }
+
+    // 해시 갱신
+    lastAutoBackupHash = currentHash;
+    console.log('[AutoBackup] 저장 완료 —', labelStr);
+
+    // 최근 10개 초과 항목 삭제
+    var listRes = await sbClient
+      .from('planner_autosaves')
+      .select('id, created_at')
+      .eq('wedding_id', currentWeddingId)
+      .order('created_at', { ascending: false });
+
+    if (!listRes.error && listRes.data && listRes.data.length > AUTO_BACKUP_KEEP_COUNT) {
+      var toDelete = listRes.data.slice(AUTO_BACKUP_KEEP_COUNT).map(function(r) { return r.id; });
+      await sbClient.from('planner_autosaves').delete().in('id', toDelete);
+      console.log('[AutoBackup] 오래된 백업 삭제:', toDelete.length + '개');
+    }
+
+  } catch (e) {
+    console.warn('[AutoBackup] 오류:', e);
+  }
+}
+
+// ── 자동백업 인터벌 시작 ──
+function startAutoBackup() {
+  if (autoBackupInterval) clearInterval(autoBackupInterval);
+  autoBackupInterval = setInterval(saveAutoBackup, AUTO_BACKUP_INTERVAL_MS);
+  console.log('[AutoBackup] 인터벌 시작 (30분)');
+}
+
+// ── 자동백업 인터벌 중지 ──
+function stopAutoBackup() {
+  if (autoBackupInterval) {
+    clearInterval(autoBackupInterval);
+    autoBackupInterval = null;
+  }
+  console.log('[AutoBackup] 인터벌 중지');
+}
+
+// ── 자동백업 목록 로드 ──
+async function loadAutoBackupList() {
+  var listEl = document.getElementById('autosave-list');
+  if (!listEl) return;
+
+  if (!sbClient || !currentWeddingId || !currentUser) {
+    listEl.innerHTML = '<p class="autosave-empty">로그인 후 이용할 수 있어요.</p>';
+    return;
+  }
+  if (currentPlan !== 'pro') {
+    listEl.innerHTML = '<p class="autosave-empty">☁️ PRO 플랜 전용 기능이에요.</p>';
+    return;
+  }
+
+  listEl.innerHTML = '<p class="autosave-empty">불러오는 중...</p>';
+
+  try {
+    var res = await sbClient
+      .from('planner_autosaves')
+      .select('id, label, created_at, saved_by')
+      .eq('wedding_id', currentWeddingId)
+      .order('created_at', { ascending: false })
+      .limit(AUTO_BACKUP_KEEP_COUNT);
+
+    if (res.error) {
+      listEl.innerHTML = '<p class="autosave-empty">목록을 불러오지 못했어요.</p>';
+      return;
+    }
+    if (!res.data || res.data.length === 0) {
+      listEl.innerHTML = '<p class="autosave-empty">아직 자동백업이 없어요.<br>30분마다 자동으로 저장돼요.</p>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < res.data.length; i++) {
+      var row = res.data[i];
+      var dateStr = row.label || new Date(row.created_at).toLocaleString('ko-KR', {
+        month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+      var isMine = row.saved_by === currentUser.id;
+      var whoStr = isMine ? '나' : '파트너';
+      var rowId = row.id.replace(/[^a-zA-Z0-9\-]/g, '');
+      html += '<div class="autosave-row">';
+      html += '<div class="autosave-info">';
+      html += '<span class="autosave-label">' + dateStr + '</span>';
+      html += '<span class="autosave-who">' + whoStr + '</span>';
+      html += '</div>';
+      html += '<button class="autosave-restore-btn" onclick="restoreFromAutoBackup(\'' + rowId + '\')">';
+      html += '복구하기</button>';
+      html += '</div>';
+    }
+    listEl.innerHTML = html;
+
+  } catch (e) {
+    listEl.innerHTML = '<p class="autosave-empty">오류가 발생했어요.</p>';
+    console.warn('[AutoBackup] 목록 로드 오류:', e);
+  }
+}
+
+// ── 자동백업 모달 열기 ──
+function openAutoBackupModal() {
+  var overlay = document.getElementById('autosave-modal-overlay');
+  if (!overlay) return;
+  overlay.classList.add('open');
+  loadAutoBackupList();
+}
+
+// ── 자동백업 모달 닫기 ──
+function closeAutoBackupModal() {
+  var overlay = document.getElementById('autosave-modal-overlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+// ── 자동백업으로부터 복구 ──
+async function restoreFromAutoBackup(id) {
+  if (!sbClient || !currentWeddingId) {
+    showToast('로그인 후 이용해주세요.');
+    return;
+  }
+
+  var confirmed = confirm(
+    '⚠️ 자동백업 복구 확인\n\n' +
+    '선택한 시점의 백업으로 현재 화면을 교체합니다.\n' +
+    '복구 후 저장 버튼을 눌러야 클라우드에 확정됩니다.\n\n' +
+    '계속할까요?'
+  );
+  if (!confirmed) {
+    showToast('복구가 취소됐어요.');
+    return;
+  }
+
+  try {
+    var res = await sbClient
+      .from('planner_autosaves')
+      .select('data')
+      .eq('id', id)
+      .single();
+
+    if (res.error || !res.data) {
+      showToast('❌ 백업 데이터를 불러오지 못했어요.');
+      return;
+    }
+
+    // applyLoadedData만 실행 — saveAll() 호출 금지
+    applyLoadedData(res.data.data);
+    isRestoredPending = true;
+    closeAutoBackupModal();
+    showToast('✅ 복구됐어요! 저장 버튼을 눌러 클라우드에 확정하세요.');
+
+  } catch (e) {
+    showToast('❌ 복구 중 오류가 발생했어요.');
+    console.warn('[AutoBackup] 복구 오류:', e);
+  }
 }

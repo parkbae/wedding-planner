@@ -79,6 +79,9 @@
       <button class="fab-backup-btn fab-restore-btn" onclick="triggerRestoreFile()" title="JSON 파일로 복구">
         <span>📤</span> 복구
       </button>
+      <button class="fab-backup-btn fab-autosave-btn" onclick="openAutoBackupModal()" title="서버 자동백업 목록">
+        <span>☁️</span> 자동백업
+      </button>
     </div>
     <!-- 복구용 숨김 파일 인풋 -->
     <input type="file" id="restore-file-input" accept=".json" style="display:none" onchange="restoreData(this)">
@@ -966,6 +969,26 @@
     <div class="re-modal-footer">
       <button class="modal-cancel" onclick="closeReModal()">취소</button>
       <button class="re-save-btn" onclick="saveReProperty()">저장하기 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 서버 자동백업 목록 모달 ── -->
+<div class="modal-overlay" id="autosave-modal-overlay" onclick="if(event.target===this)closeAutoBackupModal()">
+  <div class="modal autosave-modal">
+    <div class="autosave-modal-header">
+      <span class="autosave-modal-title">☁️ 서버 자동백업</span>
+      <button class="autosave-close-btn" onclick="closeAutoBackupModal()">✕</button>
+    </div>
+    <p class="autosave-modal-desc">30분마다 자동 저장됩니다. 최근 10개 보관.</p>
+    <div class="autosave-list-wrap">
+      <div id="autosave-list">
+        <p class="autosave-empty">불러오는 중...</p>
+      </div>
+    </div>
+    <div class="autosave-modal-footer">
+      <button class="autosave-refresh-btn" onclick="loadAutoBackupList()">🔄 새로고침</button>
+      <button class="modal-cancel" onclick="closeAutoBackupModal()">닫기</button>
     </div>
   </div>
 </div>
