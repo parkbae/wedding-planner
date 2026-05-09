@@ -164,29 +164,6 @@ let reEditId = null;
 let reActiveTypes = new Set(); // 모달에서 선택된 거래 유형
 let reFilter = 'all';
 
-const RE_M2_PER_PYEONG = 3.3058;
-
-function reAutoConvert(type, from, val) {
-  const num = parseFloat(val);
-  if (isNaN(num) || val === '') {
-    if (type === 'exclusive') {
-      if (from === 'm2') document.getElementById('re-area-exclusive-p').value = '';
-      else              document.getElementById('re-area-exclusive-m2').value = '';
-    } else {
-      if (from === 'm2') document.getElementById('re-area-supply-p').value = '';
-      else              document.getElementById('re-area-supply-m2').value = '';
-    }
-    return;
-  }
-  if (type === 'exclusive') {
-    if (from === 'm2') document.getElementById('re-area-exclusive-p').value = (num / RE_M2_PER_PYEONG).toFixed(1);
-    else              document.getElementById('re-area-exclusive-m2').value = (num * RE_M2_PER_PYEONG).toFixed(1);
-  } else {
-    if (from === 'm2') document.getElementById('re-area-supply-p').value = (num / RE_M2_PER_PYEONG).toFixed(1);
-    else              document.getElementById('re-area-supply-m2').value = (num * RE_M2_PER_PYEONG).toFixed(1);
-  }
-}
-
 const RE_STATUS_COLORS = {
   '검토중': {bg:'rgba(139,159,201,0.15)',color:'#4a6da8'},
   '임장완료': {bg:'rgba(122,171,138,0.15)',color:'#4a8a5e'},
@@ -277,12 +254,9 @@ function renderReGrid() {
           ${priceMonthly}${priceJeonse}${priceBuy}${priceEmpty}
         </div>
         <div class="re-meta-row">
-          ${p.direction ? '<span class="re-meta-item re-meta-direction">🧭 <span class="val">' + esc(p.direction) + '</span></span>' : ''}
-          ${(p.areaExclusiveM2 || p.area) ? (function(){ var m2=p.areaExclusiveM2||p.area; var py=p.areaExclusiveP||(m2?(parseFloat(m2)/RE_M2_PER_PYEONG).toFixed(1):''); return '<span class="re-meta-item">📐 전용 <span class="val">'+m2+'㎡</span><span class="re-meta-sub">/'+py+'평</span></span>'; })() : ''}
-          ${p.areaSupplyM2 ? (function(){ var m2=p.areaSupplyM2; var py=p.areaSupplyP||(parseFloat(m2)/RE_M2_PER_PYEONG).toFixed(1); return '<span class="re-meta-item">📦 공급 <span class="val">'+m2+'㎡</span><span class="re-meta-sub">/'+py+'평</span></span>'; })() : ''}
-          ${p.floor ? '<span class="re-meta-item">🏢 <span class="val">' + esc(p.floor) + '</span></span>' : ''}
-          ${p.movein ? '<span class="re-meta-item">📅 <span class="val">' + esc(p.movein) + '</span></span>' : ''}
-          ${p.maintenanceFee ? '<span class="re-meta-item re-meta-fee">🏘 관리비 <span class="val">' + p.maintenanceFee + '만원</span></span>' : ''}
+          ${p.area ? `<span class="re-meta-item">📐 <span class="val">${p.area}㎡</span></span>` : ''}
+          ${p.floor ? `<span class="re-meta-item">🏢 <span class="val">${esc(p.floor)}</span></span>` : ''}
+          ${p.movein ? `<span class="re-meta-item">📅 <span class="val">${esc(p.movein)}</span></span>` : ''}
         </div>
         ${p.link ? `<div class="re-link-row"><a href="${esc(p.link)}" target="_blank">🔗 ${esc(p.link)}</a></div>` : ''}
         ${p.memo ? `<div class="re-memo-box">${esc(p.memo)}</div>` : ''}
@@ -306,11 +280,10 @@ function openReModal(editId) {
   reEditId = editId || null;
   reActiveTypes = new Set();
   // 폼 초기화
-  ['re-name','re-location','re-monthly-deposit','re-monthly-rent','re-jeonse-price','re-buy-price','re-area-exclusive-m2','re-area-exclusive-p','re-area-supply-m2','re-area-supply-p','re-floor','re-movein','re-maintenance-fee','re-link','re-memo'].forEach(id => {
+  ['re-name','re-location','re-monthly-deposit','re-monthly-rent','re-jeonse-price','re-buy-price','re-area','re-floor','re-movein','re-link','re-memo'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   document.getElementById('re-status').value = '검토중';
-  document.getElementById('re-direction').value = '';
   ['monthly','jeonse','buy'].forEach(t => {
     const btn = document.getElementById('rtt-'+t);
     if (btn) { btn.className = 're-type-toggle'; }
@@ -324,16 +297,9 @@ function openReModal(editId) {
     if (p) {
       document.getElementById('re-name').value = p.name||'';
       document.getElementById('re-location').value = p.location||'';
-      // 면적 필드 복원 (구버전 p.area 폴백 포함)
-      var legacyArea = p.area || 0;
-      document.getElementById('re-area-exclusive-m2').value = p.areaExclusiveM2 || (legacyArea ? legacyArea : '') || '';
-      document.getElementById('re-area-exclusive-p').value  = p.areaExclusiveP  || (legacyArea ? (parseFloat(legacyArea)/RE_M2_PER_PYEONG).toFixed(1) : '') || '';
-      document.getElementById('re-area-supply-m2').value   = p.areaSupplyM2   || '';
-      document.getElementById('re-area-supply-p').value    = p.areaSupplyP    || '';
-      document.getElementById('re-direction').value = p.direction || '';
-      document.getElementById('re-floor').value   = p.floor   || '';
-      document.getElementById('re-movein').value  = p.movein  || '';
-      document.getElementById('re-maintenance-fee').value = p.maintenanceFee || '';
+      document.getElementById('re-area').value = p.area||'';
+      document.getElementById('re-floor').value = p.floor||'';
+      document.getElementById('re-movein').value = p.movein||'';
       document.getElementById('re-link').value = p.link||'';
       document.getElementById('re-memo').value = p.memo||'';
       document.getElementById('re-status').value = p.status||'검토중';
@@ -383,12 +349,7 @@ function saveReProperty() {
     monthlyRent: parseFloat(document.getElementById('re-monthly-rent').value)||0,
     jeonsePrice: parseFloat(document.getElementById('re-jeonse-price').value)||0,
     buyPrice: parseFloat(document.getElementById('re-buy-price').value)||0,
-    areaExclusiveM2: parseFloat(document.getElementById('re-area-exclusive-m2').value)||0,
-    areaExclusiveP:  parseFloat(document.getElementById('re-area-exclusive-p').value)||0,
-    areaSupplyM2:    parseFloat(document.getElementById('re-area-supply-m2').value)||0,
-    areaSupplyP:     parseFloat(document.getElementById('re-area-supply-p').value)||0,
-    direction: document.getElementById('re-direction').value,
-    maintenanceFee: parseFloat(document.getElementById('re-maintenance-fee').value)||0,
+    area: parseFloat(document.getElementById('re-area').value)||0,
     floor: document.getElementById('re-floor').value.trim(),
     movein: document.getElementById('re-movein').value.trim(),
     link: document.getElementById('re-link').value.trim(),
@@ -440,8 +401,11 @@ function openKakaoMap() {
   window.open('https://map.kakao.com/?q=' + encodeURIComponent(loc||'서울'), '_blank');
 }
 
-// 부동산 모달은 overlay 클릭으로 닫히지 않음 (입력 중 데이터 유실 방지)
-// 닫기: 헤더 닫기 버튼 / 취소 버튼 / 저장 완료 후 자동 닫힘
+// 모달 오버레이 외부 클릭 닫기
+document.addEventListener('DOMContentLoaded', () => {
+  const overlay = document.getElementById('re-modal-overlay');
+  if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) closeReModal(); });
+});
 
 
 // ── 초기화 ──
@@ -478,39 +442,87 @@ function switchMain(id) {
 }
 
 // ── 지출 내역 렌더 (윤석/혜원 컬럼 없음) ──
+// ── 지출 섹션 접힘 상태 관리 ──────────────────────
+const EXP_COLLAPSE_KEY = 'wedding_exp_collapse_v1';
+
+function loadExpCollapseState() {
+  try {
+    var raw = localStorage.getItem(EXP_COLLAPSE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+
+function saveExpCollapseState(state) {
+  try { localStorage.setItem(EXP_COLLAPSE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+// 접힘/펼침 토글 (헤더 클릭 시 호출)
+function toggleExpSection(secId, event) {
+  // 항목추가 버튼 클릭은 토글 방지
+  if (event && event.target && event.target.classList.contains('row-add-btn')) return;
+  var secEl = document.getElementById('sec-' + secId);
+  if (!secEl) return;
+  var isCollapsed = secEl.classList.contains('collapsed');
+  var newState = !isCollapsed;
+  if (newState) {
+    secEl.classList.add('collapsed');
+  } else {
+    secEl.classList.remove('collapsed');
+  }
+  var state = loadExpCollapseState();
+  state[secId] = newState;
+  saveExpCollapseState(state);
+}
+
 function renderExpense() {
   const container = document.getElementById('expense-tables');
   container.innerHTML = '';
+  var collapseState = loadExpCollapseState();
+
   expenseSections.forEach(sec => {
     const secTotal = sec.rows.reduce((s,r)=>s+(r.total||0),0);
+    const rowCount = sec.rows.length;
+    const paidCount = sec.rows.filter(r => (r.depositAmt||0) > 0 || (r.total||0) > 0).length;
+    const isCollapsed = collapseState[sec.id] !== false; // 기본값 접힘(true)
+
     const div = document.createElement('div');
-    div.className = 'exp-section';
+    div.className = 'exp-section' + (isCollapsed ? ' collapsed' : '');
     div.id = 'sec-' + sec.id;
-    div.innerHTML = `
-      <div class="exp-section-title" style="border-color:${sec.color}">
-        <span>${sec.name}</span>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <span class="sec-total" id="sectotal-${sec.id}">${fmt(secTotal)} 만원</span>
-          <button onclick="addRow('${sec.id}')" class="row-add-btn" style="margin:0;padding:3px 10px;">+ 항목추가</button>
-        </div>
-      </div>
-      <table class="exp-table">
-        <thead>
-          <tr>
-            <th style="width:28px;"></th>
-            <th>항목</th>
-            <th>업체명</th>
-            <th class="num">계약금</th>
-            <th>지출일</th>
-            <th class="num">잔금</th>
-            <th>지출예정일</th>
-            <th class="num">총금액 ✏️</th>
-            <th>결제수단</th>
-            <th>비고</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-${sec.id}"></tbody>
-      </table>`;
+
+    const metaText = rowCount + '개 항목' + (paidCount > 0 ? ' · ' + paidCount + '개 입력됨' : '');
+
+    div.innerHTML =
+      '<div class="exp-section-title" style="border-color:' + sec.color + '" onclick="toggleExpSection(\'' + sec.id + '\', event)">' +
+        '<div class="exp-sec-left">' +
+          '<span class="exp-sec-chevron">▼</span>' +
+          '<span>' + sec.name + '</span>' +
+          '<span class="exp-sec-meta">' + metaText + '</span>' +
+        '</div>' +
+        '<div class="exp-sec-right">' +
+          '<span class="sec-total" id="sectotal-' + sec.id + '">' + fmt(secTotal) + ' 만원</span>' +
+          '<button onclick="addRow(\'' + sec.id + '\')" class="row-add-btn row-add-btn-hdr" style="margin:0;padding:3px 10px;">+ 항목추가</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="exp-table-wrap">' +
+        '<table class="exp-table">' +
+          '<thead>' +
+            '<tr>' +
+              '<th style="width:28px;"></th>' +
+              '<th>항목</th>' +
+              '<th>업체명</th>' +
+              '<th class="num">계약금</th>' +
+              '<th>지출일</th>' +
+              '<th class="num">잔금</th>' +
+              '<th>지출예정일</th>' +
+              '<th class="num">총금액 ✏️</th>' +
+              '<th>결제수단</th>' +
+              '<th>비고</th>' +
+            '</tr>' +
+          '</thead>' +
+          '<tbody id="tbody-' + sec.id + '"></tbody>' +
+        '</table>' +
+      '</div>';
+
     container.appendChild(div);
     sec.rows.forEach(row => renderRow(sec.id, row));
     renderSubtotal(sec.id);
@@ -1351,33 +1363,53 @@ function renderPaymentSchedule() {
 }
 
 // ── 투두리스트 (인라인 편집 + 탭 간 이동) ──
+// ── 투두 D-Day 구간 자동 판단 ──
+// 현재 예식일까지의 잔여일수를 기준으로 기본 투두 구간 키를 반환한다.
+// currentWeddingDate 없거나 계산 실패 시 'dday' 탭 규칙에 따라 'd365' 반환 (기존 기본값 유지)
+function getDefaultTodoKey() {
+  try {
+    if (!currentWeddingDate) return 'd365';
+    var diff = Math.ceil((new Date(currentWeddingDate) - new Date()) / (1000 * 60 * 60 * 24));
+    if (diff > 300)  return 'd365';   // D-365 이상
+    if (diff > 200)  return 'd300';   // D-301 ~ D-300
+    if (diff > 100)  return 'd200';   // D-201 ~ D-200  ← D-196이면 여기
+    if (diff > 60)   return 'd100';   // D-101 ~ D-100
+    if (diff > 0)    return 'd60';    // D-61  ~ D-1
+    if (diff === 0)  return 'dday';   // D-Day 당일
+    return 'after';                   // 예식 이후
+  } catch (e) {
+    return 'd365';
+  }
+}
+
 function renderTodo() {
+  var defaultKey = getDefaultTodoKey();
   const tabsEl = document.getElementById('todo-tabs');
   const panelsEl = document.getElementById('todo-panels');
   tabsEl.innerHTML = '';
   panelsEl.innerHTML = '';
   TODO_KEYS.forEach((key, i) => {
     const data = todoData[key];
+    const isDefault = (key === defaultKey);
     const tab = document.createElement('button');
-    tab.className = 'todo-tab' + (i===0?' active':'');
+    tab.className = 'todo-tab' + (isDefault ? ' active' : '');
     tab.textContent = data.label;
     tab.onclick = () => switchTodoTab(key);
     tab.id = 'ttab-' + key;
     tabsEl.appendChild(tab);
     const panel = document.createElement('div');
-    panel.className = 'todo-panel' + (i===0?' active':'');
+    panel.className = 'todo-panel' + (isDefault ? ' active' : '');
     panel.id = 'tpanel-' + key;
-    panel.innerHTML = `
-      <div class="todo-progress">
-        <span class="tp-text">진행률</span>
-        <div class="tp-bar"><div class="tp-fill" id="tpf-${key}" style="width:0%"></div></div>
-        <span class="tp-count" id="tpc-${key}">0/${data.items.length}</span>
-      </div>
-      <div class="todo-add">
-        <input type="text" placeholder="할 일 추가..." id="tinput-${key}" onkeydown="if(event.key==='Enter') addTodo('${key}')">
-        <button onclick="addTodo('${key}')">+ 추가</button>
-      </div>
-      <div class="todo-list" id="tlist-${key}"></div>`;
+    panel.innerHTML = '<div class="todo-progress">'
+      + '<span class="tp-text">진행률</span>'
+      + '<div class="tp-bar"><div class="tp-fill" id="tpf-' + key + '" style="width:0%"></div></div>'
+      + '<span class="tp-count" id="tpc-' + key + '">0/' + data.items.length + '</span>'
+      + '</div>'
+      + '<div class="todo-add">'
+      + '<input type="text" placeholder="할 일 추가..." id="tinput-' + key + '" onkeydown="if(event.key===\'Enter\') addTodo(\'' + key + '\')">'
+      + '<button onclick="addTodo(\'' + key + '\')">+ 추가</button>'
+      + '</div>'
+      + '<div class="todo-list" id="tlist-' + key + '"></div>';
     panelsEl.appendChild(panel);
     data.items.forEach(item => renderTodoItem(key, item));
     updateTodoProgress(key);
@@ -1636,6 +1668,8 @@ let currentWeddingId = null;
 let realtimeChannel = null;
 // 마지막으로 서버에서 로드한 updated_at (충돌 감지용)
 let lastServerUpdatedAt = null;
+// 예식일 (ISO string, 투두 D-Day 구간 자동 선택에 사용)
+let currentWeddingDate = null;
 
 // Supabase 초기화 시도
 function initSupabase() {
@@ -1807,6 +1841,10 @@ async function onLoginSuccess(user) {
 function updateHeaderInfo(wedding) {
   const el = document.getElementById('header-wedding-info');
   if (!el || !wedding) return;
+  // 예식일을 전역변수에 저장 (투두 D-Day 구간 자동 선택에 사용)
+  if (wedding.wedding_date) {
+    currentWeddingDate = wedding.wedding_date;
+  }
   const venue = wedding.venue_name || '웨딩홀 미정';
   const dateStr = wedding.wedding_date
     ? new Date(wedding.wedding_date).toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric'})
@@ -2815,6 +2853,27 @@ window.addEventListener('load', async () => {
 // ═══════════════════════════════════════════════
 // 📇 업체관리 탭 (tab-vendors) — V1
 // ═══════════════════════════════════════════════
+
+// URL 자동 보정 함수
+function normalizeExternalUrl(url) {
+  if (!url) return '';
+  var trimmed = url.trim();
+  if (!trimmed) return '';
+  var protoRe = /^https?:\/\//i;
+  if (protoRe.test(trimmed)) return trimmed;
+  return 'https://' + trimmed;
+}
+
+// 업체 링크 열기 함수
+function openVendorLink(url) {
+  var normalized = normalizeExternalUrl(url);
+  if (!normalized) {
+    showToast('링크가 등록되지 않은 업체예요');
+    return;
+  }
+  window.open(normalized, '_blank', 'noopener,noreferrer');
+}
+
 let vendors = [];
 let vendorIdCounter = 8000;
 
@@ -2893,6 +2952,9 @@ function saveVendor() {
     showToast('📇 업체가 등록됐어요!');
   }
   resetVendorForm();
+  // 폼 헤더 제목 원복
+  var cardTitle2 = document.querySelector('#vd-form-wrap')?.closest('.card')?.querySelector('.card-title');
+  if (cardTitle2) cardTitle2.textContent = '➕ 업체 추가';
   var wrap = document.getElementById('vd-form-wrap');
   var btn  = document.getElementById('vd-form-toggle-btn');
   if (wrap) wrap.style.display = 'none';
@@ -2920,6 +2982,9 @@ function editVendor(id) {
   var cancelBtn = document.getElementById('vd-cancel-edit-btn');
   if (saveBtn)   saveBtn.textContent = '수정 저장하기 →';
   if (cancelBtn) cancelBtn.style.display = 'inline-block';
+  // 폼 헤더 제목 수정 모드 표시
+  var cardTitle = document.querySelector('#vd-form-wrap')?.closest('.card')?.querySelector('.card-title');
+  if (cardTitle) cardTitle.textContent = '✏️ 업체 수정 — ' + v.name;
   // 폼으로 스크롤
   var wrap = document.getElementById('vd-form-wrap');
   if (wrap) wrap.scrollIntoView({behavior:'smooth', block:'start'});
@@ -2927,6 +2992,9 @@ function editVendor(id) {
 
 function cancelVendorEdit() {
   resetVendorForm();
+  // 폼 헤더 제목 원복
+  var cardTitle = document.querySelector('#vd-form-wrap')?.closest('.card')?.querySelector('.card-title');
+  if (cardTitle) cardTitle.textContent = '➕ 업체 추가';
   var wrap = document.getElementById('vd-form-wrap');
   var btn  = document.getElementById('vd-form-toggle-btn');
   if (wrap) wrap.style.display = 'none';
@@ -3000,8 +3068,11 @@ function renderVendors() {
     var phoneCell = v.phone
       ? '<a class="vd-phone-link" href="tel:' + v.phone + '">' + v.phone + '</a>'
       : '<span style="color:var(--text-l);">-</span>';
+    var linkLabel = v.link
+      ? (v.link.length > 30 ? v.link.substring(0, 28) + '…' : v.link)
+      : '';
     var linkCell = v.link
-      ? '<a class="vd-ext-link" href="' + v.link + '" target="_blank" rel="noopener">🔗 링크</a>'
+      ? '<a class="vd-ext-link" href="javascript:void(0)" onclick="openVendorLink(\'' + v.link.replace(/'/g, '\\\'') + '\')">🔗 ' + linkLabel + '</a>'
       : '';
     var memoCell = v.memo
       ? '<span style="font-size:10px;color:var(--text-l);display:block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + v.memo.replace(/"/g,'&quot;') + '">' + v.memo + '</span>'

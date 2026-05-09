@@ -110,9 +110,24 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .total-display .amt{font-family:'DM Serif Display',serif;font-size:26px;color:var(--gold);}
 
 /* 지출 테이블 - 윤석/혜원 컬럼 제거됨 */
-.exp-section{margin-bottom:28px;}
-.exp-section-title{font-family:'Noto Serif KR',serif;font-size:13px;font-weight:600;color:var(--navy);padding:10px 0 8px;border-bottom:2px solid var(--navy);margin-bottom:0;display:flex;justify-content:space-between;align-items:center;}
+.exp-section{margin-bottom:20px;}
+.exp-section-title{font-family:'Noto Serif KR',serif;font-size:13px;font-weight:600;color:var(--navy);padding:10px 14px 10px 14px;border-bottom:2px solid var(--navy);margin-bottom:0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;border-radius:6px 6px 0 0;transition:background .15s;}
+.exp-section-title:hover{background:var(--blush);}
 .exp-section-title .sec-total{font-family:'DM Serif Display',serif;font-size:16px;color:var(--rose-deep);}
+/* 섹션 헤더 왼쪽 영역 */
+.exp-sec-left{display:flex;align-items:center;gap:10px;}
+.exp-sec-chevron{font-size:11px;color:var(--text-l);transition:transform .2s;display:inline-block;width:14px;text-align:center;}
+.exp-section.collapsed .exp-sec-chevron{transform:rotate(-90deg);}
+/* 헤더 오른쪽 영역 */
+.exp-sec-right{display:flex;align-items:center;gap:10px;}
+.exp-sec-meta{font-size:10px;color:var(--text-l);font-family:inherit;}
+/* 접힘 상태 - tbody + thead + subtotal 숨김 */
+.exp-section.collapsed .exp-table-wrap{display:none;}
+/* 테이블 래퍼 */
+.exp-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+/* 항목추가 버튼 — 헤더 안에서만 표시 */
+.exp-section.collapsed .row-add-btn-hdr{display:none;}
+.row-add-btn-hdr{display:inline-block;}
 .exp-table{width:100%;border-collapse:collapse;font-size:12px;}
 .exp-table th{background:var(--cream);color:var(--text-l);font-weight:500;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
 .exp-table th.num{text-align:right;}
@@ -677,10 +692,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .re-meta-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
 .re-meta-item{font-size:11px;color:var(--text-l);display:flex;align-items:center;gap:3px;}
 .re-meta-item span.val{color:var(--text);font-weight:500;}
-.re-meta-item .re-meta-sub{color:var(--text-l);font-size:10px;margin-left:1px;}
-.re-meta-direction{background:rgba(139,159,201,0.12);border-radius:6px;padding:2px 7px;color:#4a6da8;font-weight:600;}
-.re-meta-fee{background:rgba(201,169,110,0.12);border-radius:6px;padding:2px 7px;color:#8a6a2e;font-weight:600;}
-.re-area-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
 .re-link-row{margin-bottom:10px;}
 .re-link-row a{font-size:11px;color:#1a73e8;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .re-link-row a:hover{text-decoration:underline;}
@@ -727,7 +738,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   .re-grid{grid-template-columns:1fr;}
   .re-price-grid{grid-template-columns:1fr 1fr;}
   .re-form-row,.re-form-row-3{grid-template-columns:1fr;}
-  .re-area-grid{grid-template-columns:1fr 1fr;}
 }
 
 /* ── 결제 일정 / 현금흐름 카드 ── */
@@ -993,8 +1003,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   .gc-input{width:60px;}
 
   /* ── 7. 지출 내역 — 테이블 가로 스크롤 ── */
-  .exp-section{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .exp-section .exp-table{min-width:560px;}   /* 테이블 최소폭 확보, 부모 스크롤 */
+  .exp-section{overflow-x:visible;}
+  .exp-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .exp-table-wrap .exp-table{min-width:560px;}   /* 테이블 최소폭 확보, 부모 스크롤 */
   /* 페이지 전체 width 깨짐 방지 */
   #tab-expense{overflow-x:hidden;}
   .exp-table{font-size:11px;}
