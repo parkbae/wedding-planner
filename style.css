@@ -677,6 +677,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .re-meta-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
 .re-meta-item{font-size:11px;color:var(--text-l);display:flex;align-items:center;gap:3px;}
 .re-meta-item span.val{color:var(--text);font-weight:500;}
+.re-meta-item .re-meta-sub{color:var(--text-l);font-size:10px;margin-left:1px;}
+.re-meta-direction{background:rgba(139,159,201,0.12);border-radius:6px;padding:2px 7px;color:#4a6da8;font-weight:600;}
+.re-meta-fee{background:rgba(201,169,110,0.12);border-radius:6px;padding:2px 7px;color:#8a6a2e;font-weight:600;}
+.re-area-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
 .re-link-row{margin-bottom:10px;}
 .re-link-row a{font-size:11px;color:#1a73e8;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .re-link-row a:hover{text-decoration:underline;}
@@ -723,6 +727,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   .re-grid{grid-template-columns:1fr;}
   .re-price-grid{grid-template-columns:1fr 1fr;}
   .re-form-row,.re-form-row-3{grid-template-columns:1fr;}
+  .re-area-grid{grid-template-columns:1fr 1fr;}
 }
 
 /* ── 결제 일정 / 현금흐름 카드 ── */

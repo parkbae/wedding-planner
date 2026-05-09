@@ -892,9 +892,12 @@
 <!-- ── 부동산 추가/편집 모달 ── -->
 <div class="modal-overlay" id="re-modal-overlay">
   <div class="re-modal modal" style="padding:0;width:480px;">
-    <div class="re-modal-header">
-      <h3 id="re-modal-title">🏠 매물 등록</h3>
-      <p>임장 정보를 함께 기록해요</p>
+    <div class="re-modal-header" style="display:flex;align-items:flex-start;justify-content:space-between;">
+      <div>
+        <h3 id="re-modal-title">🏠 매물 등록</h3>
+        <p>임장 정보를 함께 기록해요</p>
+      </div>
+      <button onclick="closeReModal()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:20px;cursor:pointer;line-height:1;padding:0;margin-top:2px;font-weight:300;" title="닫기">✕</button>
     </div>
     <div class="re-modal-body">
       <input type="hidden" id="re-edit-id">
@@ -956,11 +959,47 @@
       </div>
 
       <div class="re-form-section" style="margin-top:16px;">
-        <label class="re-form-label">📐 기본 정보</label>
-        <div class="re-form-row-3">
+        <label class="re-form-label">📐 면적 정보</label>
+        <div class="re-form-row re-area-grid">
           <div>
             <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">전용면적 (㎡)</label>
-            <input class="re-form-input" type="number" id="re-area" placeholder="예) 59">
+            <input class="re-form-input" type="number" id="re-area-exclusive-m2" placeholder="예) 59.9"
+              oninput="reAutoConvert('exclusive','m2',this.value)">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">전용평수 (평)</label>
+            <input class="re-form-input" type="number" id="re-area-exclusive-p" placeholder="예) 18.1"
+              oninput="reAutoConvert('exclusive','p',this.value)">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">공급면적 (㎡)</label>
+            <input class="re-form-input" type="number" id="re-area-supply-m2" placeholder="예) 84.9"
+              oninput="reAutoConvert('supply','m2',this.value)">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">공급평수 (평)</label>
+            <input class="re-form-input" type="number" id="re-area-supply-p" placeholder="예) 25.7"
+              oninput="reAutoConvert('supply','p',this.value)">
+          </div>
+        </div>
+      </div>
+
+      <div class="re-form-section">
+        <label class="re-form-label">🧭 기타 정보</label>
+        <div class="re-form-row-3">
+          <div>
+            <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">방향</label>
+            <select class="re-form-input" id="re-direction" style="cursor:pointer;">
+              <option value="">미정</option>
+              <option value="남향">남향</option>
+              <option value="동향">동향</option>
+              <option value="서향">서향</option>
+              <option value="북향">북향</option>
+              <option value="남동향">남동향</option>
+              <option value="남서향">남서향</option>
+              <option value="북동향">북동향</option>
+              <option value="북서향">북서향</option>
+            </select>
           </div>
           <div>
             <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">층수</label>
@@ -970,6 +1009,14 @@
             <label style="font-size:11px;color:var(--text-l);display:block;margin-bottom:4px;">입주 가능일</label>
             <input class="re-form-input" type="text" id="re-movein" placeholder="예) 협의 가능">
           </div>
+        </div>
+      </div>
+
+      <div class="re-form-section">
+        <label class="re-form-label">🏘 관리비</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input class="re-form-input" type="number" id="re-maintenance-fee" placeholder="예) 15" style="max-width:140px;">
+          <span style="font-size:13px;color:var(--text-l);white-space:nowrap;">만원 / 월</span>
         </div>
       </div>
 

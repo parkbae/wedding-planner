@@ -164,6 +164,29 @@ let reEditId = null;
 let reActiveTypes = new Set(); // 모달에서 선택된 거래 유형
 let reFilter = 'all';
 
+const RE_M2_PER_PYEONG = 3.3058;
+
+function reAutoConvert(type, from, val) {
+  const num = parseFloat(val);
+  if (isNaN(num) || val === '') {
+    if (type === 'exclusive') {
+      if (from === 'm2') document.getElementById('re-area-exclusive-p').value = '';
+      else              document.getElementById('re-area-exclusive-m2').value = '';
+    } else {
+      if (from === 'm2') document.getElementById('re-area-supply-p').value = '';
+      else              document.getElementById('re-area-supply-m2').value = '';
+    }
+    return;
+  }
+  if (type === 'exclusive') {
+    if (from === 'm2') document.getElementById('re-area-exclusive-p').value = (num / RE_M2_PER_PYEONG).toFixed(1);
+    else              document.getElementById('re-area-exclusive-m2').value = (num * RE_M2_PER_PYEONG).toFixed(1);
+  } else {
+    if (from === 'm2') document.getElementById('re-area-supply-p').value = (num / RE_M2_PER_PYEONG).toFixed(1);
+    else              document.getElementById('re-area-supply-m2').value = (num * RE_M2_PER_PYEONG).toFixed(1);
+  }
+}
+
 const RE_STATUS_COLORS = {
   '검토중': {bg:'rgba(139,159,201,0.15)',color:'#4a6da8'},
   '임장완료': {bg:'rgba(122,171,138,0.15)',color:'#4a8a5e'},
@@ -254,9 +277,12 @@ function renderReGrid() {
           ${priceMonthly}${priceJeonse}${priceBuy}${priceEmpty}
         </div>
         <div class="re-meta-row">
-          ${p.area ? `<span class="re-meta-item">📐 <span class="val">${p.area}㎡</span></span>` : ''}
-          ${p.floor ? `<span class="re-meta-item">🏢 <span class="val">${esc(p.floor)}</span></span>` : ''}
-          ${p.movein ? `<span class="re-meta-item">📅 <span class="val">${esc(p.movein)}</span></span>` : ''}
+          ${p.direction ? '<span class="re-meta-item re-meta-direction">🧭 <span class="val">' + esc(p.direction) + '</span></span>' : ''}
+          ${(p.areaExclusiveM2 || p.area) ? (function(){ var m2=p.areaExclusiveM2||p.area; var py=p.areaExclusiveP||(m2?(parseFloat(m2)/RE_M2_PER_PYEONG).toFixed(1):''); return '<span class="re-meta-item">📐 전용 <span class="val">'+m2+'㎡</span><span class="re-meta-sub">/'+py+'평</span></span>'; })() : ''}
+          ${p.areaSupplyM2 ? (function(){ var m2=p.areaSupplyM2; var py=p.areaSupplyP||(parseFloat(m2)/RE_M2_PER_PYEONG).toFixed(1); return '<span class="re-meta-item">📦 공급 <span class="val">'+m2+'㎡</span><span class="re-meta-sub">/'+py+'평</span></span>'; })() : ''}
+          ${p.floor ? '<span class="re-meta-item">🏢 <span class="val">' + esc(p.floor) + '</span></span>' : ''}
+          ${p.movein ? '<span class="re-meta-item">📅 <span class="val">' + esc(p.movein) + '</span></span>' : ''}
+          ${p.maintenanceFee ? '<span class="re-meta-item re-meta-fee">🏘 관리비 <span class="val">' + p.maintenanceFee + '만원</span></span>' : ''}
         </div>
         ${p.link ? `<div class="re-link-row"><a href="${esc(p.link)}" target="_blank">🔗 ${esc(p.link)}</a></div>` : ''}
         ${p.memo ? `<div class="re-memo-box">${esc(p.memo)}</div>` : ''}
@@ -280,10 +306,11 @@ function openReModal(editId) {
   reEditId = editId || null;
   reActiveTypes = new Set();
   // 폼 초기화
-  ['re-name','re-location','re-monthly-deposit','re-monthly-rent','re-jeonse-price','re-buy-price','re-area','re-floor','re-movein','re-link','re-memo'].forEach(id => {
+  ['re-name','re-location','re-monthly-deposit','re-monthly-rent','re-jeonse-price','re-buy-price','re-area-exclusive-m2','re-area-exclusive-p','re-area-supply-m2','re-area-supply-p','re-floor','re-movein','re-maintenance-fee','re-link','re-memo'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   document.getElementById('re-status').value = '검토중';
+  document.getElementById('re-direction').value = '';
   ['monthly','jeonse','buy'].forEach(t => {
     const btn = document.getElementById('rtt-'+t);
     if (btn) { btn.className = 're-type-toggle'; }
@@ -297,9 +324,16 @@ function openReModal(editId) {
     if (p) {
       document.getElementById('re-name').value = p.name||'';
       document.getElementById('re-location').value = p.location||'';
-      document.getElementById('re-area').value = p.area||'';
-      document.getElementById('re-floor').value = p.floor||'';
-      document.getElementById('re-movein').value = p.movein||'';
+      // 면적 필드 복원 (구버전 p.area 폴백 포함)
+      var legacyArea = p.area || 0;
+      document.getElementById('re-area-exclusive-m2').value = p.areaExclusiveM2 || (legacyArea ? legacyArea : '') || '';
+      document.getElementById('re-area-exclusive-p').value  = p.areaExclusiveP  || (legacyArea ? (parseFloat(legacyArea)/RE_M2_PER_PYEONG).toFixed(1) : '') || '';
+      document.getElementById('re-area-supply-m2').value   = p.areaSupplyM2   || '';
+      document.getElementById('re-area-supply-p').value    = p.areaSupplyP    || '';
+      document.getElementById('re-direction').value = p.direction || '';
+      document.getElementById('re-floor').value   = p.floor   || '';
+      document.getElementById('re-movein').value  = p.movein  || '';
+      document.getElementById('re-maintenance-fee').value = p.maintenanceFee || '';
       document.getElementById('re-link').value = p.link||'';
       document.getElementById('re-memo').value = p.memo||'';
       document.getElementById('re-status').value = p.status||'검토중';
@@ -349,7 +383,12 @@ function saveReProperty() {
     monthlyRent: parseFloat(document.getElementById('re-monthly-rent').value)||0,
     jeonsePrice: parseFloat(document.getElementById('re-jeonse-price').value)||0,
     buyPrice: parseFloat(document.getElementById('re-buy-price').value)||0,
-    area: parseFloat(document.getElementById('re-area').value)||0,
+    areaExclusiveM2: parseFloat(document.getElementById('re-area-exclusive-m2').value)||0,
+    areaExclusiveP:  parseFloat(document.getElementById('re-area-exclusive-p').value)||0,
+    areaSupplyM2:    parseFloat(document.getElementById('re-area-supply-m2').value)||0,
+    areaSupplyP:     parseFloat(document.getElementById('re-area-supply-p').value)||0,
+    direction: document.getElementById('re-direction').value,
+    maintenanceFee: parseFloat(document.getElementById('re-maintenance-fee').value)||0,
     floor: document.getElementById('re-floor').value.trim(),
     movein: document.getElementById('re-movein').value.trim(),
     link: document.getElementById('re-link').value.trim(),
@@ -401,11 +440,8 @@ function openKakaoMap() {
   window.open('https://map.kakao.com/?q=' + encodeURIComponent(loc||'서울'), '_blank');
 }
 
-// 모달 오버레이 외부 클릭 닫기
-document.addEventListener('DOMContentLoaded', () => {
-  const overlay = document.getElementById('re-modal-overlay');
-  if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) closeReModal(); });
-});
+// 부동산 모달은 overlay 클릭으로 닫히지 않음 (입력 중 데이터 유실 방지)
+// 닫기: 헤더 닫기 버튼 / 취소 버튼 / 저장 완료 후 자동 닫힘
 
 
 // ── 초기화 ──
