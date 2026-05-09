@@ -1221,3 +1221,73 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   .gs-edit-btns{padding:10px 16px 14px;}
   .gs-edit-input{font-size:16px;} /* iOS 줌 방지 */
 }
+
+/* ── 실지출 현황 패널 ── */
+.eref-wrap {
+  margin: 12px 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.eref-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  cursor: pointer;
+  background: var(--bg-card, #fafafa);
+  border-bottom: 1px solid transparent;
+  user-select: none;
+  transition: background 0.15s;
+}
+.eref-toggle:hover { background: var(--bg-hover, #f0f0f0); }
+.eref-toggle-icon { font-size: 10px; color: var(--text-l); min-width: 12px; }
+.eref-toggle-title { font-size: 13px; font-weight: 600; color: var(--navy, #2c3e6b); }
+.eref-toggle-sub { font-size: 11px; color: var(--text-l); flex: 1; }
+.eref-body {
+  padding: 12px 14px 10px;
+  background: white;
+  border-top: 1px solid var(--border);
+}
+.eref-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 13px;
+  border-bottom: 1px dashed var(--border);
+}
+.eref-row:last-of-type { border-bottom: none; }
+.eref-sec-name { color: var(--text); }
+.eref-sec-amt { font-weight: 500; color: var(--text); }
+.eref-summary {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.eref-sum-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 3px 0;
+  color: var(--text-l);
+}
+.eref-diff {
+  font-weight: 700;
+  font-size: 13px;
+  padding: 5px 0 2px;
+  border-top: 1px solid var(--border);
+  margin-top: 2px;
+}
+.eref-over { color: var(--rose, #e05c6a); }
+.eref-ok   { color: var(--success, #4caf88); }
+@media(max-width:480px) {
+  .eref-toggle { padding: 9px 12px; }
+  .eref-toggle-sub { display: none; }
+  .eref-body { padding: 10px 12px 8px; }
+  .eref-row, .eref-sum-row { font-size: 12px; }
+}

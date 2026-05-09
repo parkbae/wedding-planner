@@ -64,6 +64,14 @@ const defaultExpense = [
   ]},
 ];
 
+// ── 예산플래너 탭 ↔ 지출내역 섹션 매핑 ──
+const BUDGET_SECTION_MAP = {
+  'b-wedding':  ['s-wedding', 's-sdme', 's-dress', 's-suit', 's-hanbok'],
+  'b-etc':      ['s-gift', 's-meeting', 's-etc'],
+  'b-honeymoon':['s-honeymoon'],
+  'b-house':    ['s-house']
+};
+
 const defaultBudgetTabs = [
   { id:'b-wedding', name:'💒 예식', tip:'예식장·스드메 추가금 별도. 총액 10% 예비비 필수!', limitPct:25,
     items:[{id:'b1',name:'웨딩홀 대관료+식대',val:0},{id:'b2',name:'스드메',val:0},{id:'b3',name:'본식 스냅·영상',val:0},{id:'b4',name:'한복·예복·혼주',val:0},{id:'b5',name:'예비비(10%)',val:0}]},
@@ -754,9 +762,11 @@ function renderBudgetTabs() {
     if (tab.tip) { const tip=document.createElement('div'); tip.className='tip-box'; tip.textContent='💡 '+tab.tip; panel.appendChild(tip); }
     panelsEl.appendChild(panel);
     tab.items.forEach(item => renderBudgetItem(tab.id, item, i));
+    renderExpenseRefPanel(tab.id);
   });
   budgetTabs.forEach(t => updateLimitStatusBar(t.id));
   updateSummary();
+  refreshExpenseRefPanels();
 }
 
 function renderBudgetItem(tabId, item, tabIdx) {
@@ -1027,6 +1037,82 @@ function updateBudgetItem(tabId, itemId, val) {
   updateLimitStatusBar(tabId);
   updateSummary();
 }
+// ── 실지출 현황 패널 관련 함수 ──
+
+function getExpenseSectionTotal(secId) {
+  var sec = expenseSections.find(function(s){ return s.id === secId; });
+  if (!sec) return 0;
+  return sec.rows.reduce(function(s, r){ return s + (r.total || 0); }, 0);
+}
+
+function refreshExpenseRefPanels() {
+  budgetTabs.forEach(function(tab) {
+    var panelEl = document.getElementById('eref-body-' + tab.id);
+    if (!panelEl) return;
+    var secIds = BUDGET_SECTION_MAP[tab.id] || [];
+    var budgetSum = tab.items.reduce(function(s, it){ return s + (it.val || 0); }, 0);
+    var expSum = secIds.reduce(function(s, sid){ return s + getExpenseSectionTotal(sid); }, 0);
+    var diff = budgetSum - expSum;
+    var statusCls = expSum > budgetSum ? 'eref-over' : 'eref-ok';
+    var statusTxt = expSum > budgetSum
+      ? (fmt(expSum - budgetSum) + ' 만원 초과 ⚠️')
+      : (fmt(diff) + ' 만원 여유 ✅');
+
+    var rowsHtml = '';
+    secIds.forEach(function(sid) {
+      var sec = expenseSections.find(function(s){ return s.id === sid; });
+      var secName = sec ? sec.name : sid;
+      var secTotal = getExpenseSectionTotal(sid);
+      rowsHtml += '<div class="eref-row">'
+        + '<span class="eref-sec-name">' + secName + '</span>'
+        + '<span class="eref-sec-amt">' + fmt(secTotal) + ' 만원</span>'
+        + '</div>';
+    });
+
+    panelEl.innerHTML = rowsHtml
+      + '<div class="eref-summary">'
+      + '<div class="eref-sum-row"><span>예산 항목 합계</span><span>' + fmt(budgetSum) + ' 만원</span></div>'
+      + '<div class="eref-sum-row"><span>실제 지출 합계</span><span>' + fmt(expSum) + ' 만원</span></div>'
+      + '<div class="eref-sum-row eref-diff ' + statusCls + '"><span>차이</span><span>' + statusTxt + '</span></div>'
+      + '</div>';
+  });
+}
+
+function renderExpenseRefPanel(tabId) {
+  var panel = document.getElementById('cpanel-' + tabId);
+  if (!panel) return;
+  if (document.getElementById('eref-wrap-' + tabId)) return;
+
+  var secIds = BUDGET_SECTION_MAP[tabId] || [];
+  var secNames = secIds.map(function(sid) {
+    var sec = expenseSections.find(function(s){ return s.id === sid; });
+    return sec ? sec.name : sid;
+  }).join(', ');
+
+  var wrap = document.createElement('div');
+  wrap.className = 'eref-wrap';
+  wrap.id = 'eref-wrap-' + tabId;
+
+  wrap.innerHTML = '<div class="eref-toggle" onclick="toggleExpenseRefPanel(\'' + tabId + '\')">'
+    + '<span class="eref-toggle-icon" id="eref-icon-' + tabId + '">▶</span>'
+    + '<span class="eref-toggle-title">📊 실지출 현황</span>'
+    + '<span class="eref-toggle-sub">(' + secNames + ')</span>'
+    + '</div>'
+    + '<div class="eref-body" id="eref-body-' + tabId + '" style="display:none;"></div>';
+
+  panel.appendChild(wrap);
+}
+
+function toggleExpenseRefPanel(tabId) {
+  var body = document.getElementById('eref-body-' + tabId);
+  var icon = document.getElementById('eref-icon-' + tabId);
+  if (!body) return;
+  var isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (icon) icon.textContent = isOpen ? '▶' : '▼';
+  if (!isOpen) refreshExpenseRefPanels();
+}
+
 
 function deleteBudgetTab(tabId) {
   if (budgetTabs.length<=1) { alert('최소 1개 카테고리는 유지해야 해요!'); return; }
@@ -1172,6 +1258,7 @@ function updateSummary() {
   calcNet();
   renderGuidelineCards();
   renderPaymentSchedule();
+  refreshExpenseRefPanels();
 }
 
 // 서브탭 전환 (3컬럼 변경 후 no-op — 하위 호환용)
