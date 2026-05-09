@@ -994,6 +994,7 @@ function renderGuidelineCards() {
   const disp=document.getElementById('pct-sum-display');
   if(badge){badge.textContent='합계 '+pctSum+'%';badge.className='badge '+(pctSum>100?'badge-warn':'badge-ok');}
   if(disp){disp.textContent=pctSum+'%';disp.className='ptv'+(pctSum>100?' over':'');}
+  updateGuidelineSummary();
 }
 
 function switchBudgetTab(id) {
@@ -1140,6 +1141,8 @@ function confirmAddTab() {
 function calcTotal() {
   totalBudget = ['my-savings','partner-savings','family-support','loan'].reduce((s,id)=>s+(parseFloat(document.getElementById(id)?.value)||0),0);
   document.getElementById('total-budget-display').textContent = fmt(totalBudget) + ' 만원';
+  var mobileAmt = document.getElementById('total-budget-display-mobile');
+  if (mobileAmt) mobileAmt.textContent = fmt(totalBudget) + ' 만원';
   budgetTabs.forEach(t => updateLimitStatusBar(t.id));
   updateSummary();
   // 예산 플래너 탭의 상한 가이드 금액도 갱신
@@ -1259,6 +1262,7 @@ function updateSummary() {
   renderGuidelineCards();
   renderPaymentSchedule();
   refreshExpenseRefPanels();
+  renderTodayBar();
 }
 
 // 서브탭 전환 (3컬럼 변경 후 no-op — 하위 호환용)
@@ -4061,5 +4065,206 @@ async function restoreFromAutoBackup(id) {
   } catch (e) {
     showToast('❌ 복구 중 오류가 발생했어요.');
     console.warn('[AutoBackup] 복구 오류:', e);
+  }
+}
+
+// ══════════════════════════════════════════════════
+// 오늘의 결혼 준비 현황 바 렌더
+// ══════════════════════════════════════════════════
+function renderTodayBar() {
+  renderTodayBar_DDay();
+  renderTodayBar_Todo();
+  renderTodayBar_Vendor();
+  renderTodayBar_Guest();
+}
+
+// ── 1. D-Day + 준비 구간 ──
+function renderTodayBar_DDay() {
+  var numEl    = document.getElementById('stb-dday-num');
+  var dateEl   = document.getElementById('stb-dday-date');
+  var phaseEl  = document.getElementById('stb-section-phase');
+  if (!numEl || !dateEl) return;
+
+  var key       = getDefaultTodoKey();
+  var phaseText = TODO_LABELS[key] || '—';
+
+  if (phaseEl) phaseEl.textContent = '현재 구간: ' + phaseText;
+
+  if (!currentWeddingDate) {
+    numEl.textContent  = 'D-???';
+    dateEl.textContent = '예식일 미설정';
+    return;
+  }
+  try {
+    var today   = new Date();
+    today.setHours(0, 0, 0, 0);
+    var wedding = new Date(currentWeddingDate);
+    wedding.setHours(0, 0, 0, 0);
+    var diff    = Math.ceil((wedding - today) / (1000 * 60 * 60 * 24));
+    var days    = ['일','월','화','수','목','금','토'];
+    var dayOfWk = days[wedding.getDay()];
+    var mo      = wedding.getMonth() + 1;
+    var dd      = wedding.getDate();
+    var dateStr = mo + '월 ' + dd + '일 (' + dayOfWk + ')';
+
+    numEl.textContent  = diff > 0 ? 'D-' + diff : (diff === 0 ? 'D-Day' : 'D+' + Math.abs(diff));
+    dateEl.textContent = '예식일 ' + dateStr;
+  } catch (e) {
+    numEl.textContent  = 'D-???';
+    dateEl.textContent = '계산 오류';
+  }
+}
+
+// ── 2. 투두 현황 ──
+function renderTodayBar_Todo() {
+  var valEl = document.getElementById('stb-todo-val');
+  var subEl = document.getElementById('stb-todo-sub');
+  if (!valEl || !subEl) return;
+
+  try {
+    var key   = getDefaultTodoKey();
+    var items = (todoData[key] && Array.isArray(todoData[key].items)) ? todoData[key].items : [];
+    var total = items.length;
+    var done  = items.filter(function(i) { return i.done; }).length;
+    var left  = total - done;
+
+    valEl.textContent = left + '개 미완료';
+    subEl.textContent = done + '/' + total + ' 완료';
+  } catch (e) {
+    valEl.textContent = '—';
+    subEl.textContent = '데이터 없음';
+  }
+}
+
+// ── 3. 업체 잔금 / 다음 미팅 ──
+function renderTodayBar_Vendor() {
+  var valEl = document.getElementById('stb-vendor-val');
+  var subEl = document.getElementById('stb-vendor-sub');
+  if (!valEl || !subEl) return;
+
+  try {
+    var vList      = Array.isArray(vendors) ? vendors : [];
+    var balVendors = vList.filter(function(v) { return v.status === '잔금예정'; });
+    var cnt        = balVendors.length;
+
+    valEl.textContent = cnt > 0 ? cnt + '곳' : '없음';
+
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var upcoming = vList
+      .filter(function(v) { return v.nextMeetingDate; })
+      .map(function(v) {
+        var d = new Date(v.nextMeetingDate);
+        return { name: v.name, date: d };
+      })
+      .filter(function(x) { return !isNaN(x.date.getTime()) && x.date >= today; })
+      .sort(function(a, b) { return a.date - b.date; });
+
+    if (upcoming.length > 0) {
+      var next = upcoming[0];
+      var mo   = next.date.getMonth() + 1;
+      var dd   = next.date.getDate();
+      subEl.textContent = next.name + ' ' + mo + '/' + dd;
+    } else {
+      subEl.textContent = '다음 미팅 없음';
+    }
+  } catch (e) {
+    valEl.textContent = '—';
+    subEl.textContent = '데이터 없음';
+  }
+}
+
+// ── 4. 하객 현황 ──
+function renderTodayBar_Guest() {
+  var valEl = document.getElementById('stb-guest-val');
+  var subEl = document.getElementById('stb-guest-sub');
+  if (!valEl || !subEl) return;
+
+  try {
+    var managed  = calcManagedGuestCount();
+    var guestsEl = document.getElementById('guests');
+    var target   = guestsEl ? (parseInt(guestsEl.value, 10) || 0) : 0;
+    var total    = Math.max(managed, target);
+
+    var attending = (guestState && Array.isArray(guestState.namedGuests))
+      ? guestState.namedGuests.filter(function(g) { return g.rsvp === 'attending'; }).length
+      : 0;
+    var invited = (guestState && Array.isArray(guestState.namedGuests))
+      ? guestState.namedGuests.filter(function(g) {
+          return !!(g.physicalInviteSent || g.mobileInviteSent);
+        }).length
+      : 0;
+
+    valEl.textContent = '총 ' + total + '명';
+    subEl.textContent = '참석 ' + attending + '명 · 청첩장 ' + invited + '명';
+  } catch (e) {
+    valEl.textContent = '—';
+    subEl.textContent = '데이터 없음';
+  }
+}
+
+// ── 5. (요청함 배지 — 요약탭에서 제거됨) ──
+
+// ── 결제 일정 전체 접힘/펼침 토글 ──
+var _pscBodyOpen = false;
+function togglePscBody() {
+  _pscBodyOpen = !_pscBodyOpen;
+  var bodyEl  = document.getElementById('psc-body');
+  var chevron = document.getElementById('psc-body-chevron');
+  if (bodyEl)  bodyEl.style.display  = _pscBodyOpen ? 'block' : 'none';
+  if (chevron) chevron.textContent   = _pscBodyOpen ? '상세 접기 ▴' : '상세 펼치기 ▾';
+}
+
+// ── 하위 호환: 기존 togglePscList 호출 잔존 시 무해하게 처리 ──
+var _pscListOpen = false;
+function togglePscList() { /* 통합됨 — togglePscBody 사용 */ }
+
+// ── 예산 상한선 카드 접힘 토글 ──
+var _guidelineOpen = false;
+function toggleGuidelineCard() {
+  _guidelineOpen = !_guidelineOpen;
+  var body    = document.getElementById('guideline-card-body');
+  var chevron = document.getElementById('guideline-chevron');
+  var sumText = document.getElementById('guideline-summary-text');
+  if (body)    body.style.display    = _guidelineOpen ? 'block' : 'none';
+  if (chevron) chevron.textContent   = _guidelineOpen ? '접기 ▴' : '펼치기 ▾';
+  if (sumText) sumText.style.display = _guidelineOpen ? 'none' : '';
+  if (_guidelineOpen) renderGuidelineCards();
+}
+
+// ── 예산 상한선 요약 텍스트 업데이트 (renderGuidelineCards 이후 호출) ──
+function updateGuidelineSummary() {
+  var sumText = document.getElementById('guideline-summary-text');
+  if (!sumText || _guidelineOpen) return;
+  var overCnt = 0;
+  var warnCnt = 0;
+  budgetTabs.forEach(function(tab) {
+    var limitPct = tab.limitPct || 0;
+    var limitAmt = tab.limitAmt > 0
+      ? tab.limitAmt
+      : (totalBudget > 0 ? Math.round(totalBudget * limitPct / 100) : 0);
+    if (limitAmt === 0) return;
+    var usedAmt = tab.items.reduce(function(s, it) { return s + (it.val || 0); }, 0);
+    if (usedAmt > limitAmt) { overCnt++; }
+    else if (limitAmt > 0 && usedAmt / limitAmt >= 0.8) { warnCnt++; }
+  });
+  var parts = [];
+  if (overCnt > 0) parts.push('초과 ' + overCnt + '개 ⚠️');
+  if (warnCnt > 0) parts.push('주의 ' + warnCnt + '개');
+  sumText.textContent = parts.length > 0 ? parts.join(' · ') : '';
+}
+
+/* ── 모바일 총 예산 설정 접힘/펼침 ── */
+function toggleBudgetSetup() {
+  var collapsible = document.getElementById('budget-collapsible');
+  var btn = document.getElementById('budget-toggle-btn');
+  if (!collapsible || !btn) return;
+  var isOpen = collapsible.classList.contains('budget-open');
+  if (isOpen) {
+    collapsible.classList.remove('budget-open');
+    btn.textContent = '예산 설정 펼치기 ▾';
+  } else {
+    collapsible.classList.add('budget-open');
+    btn.textContent = '예산 설정 접기 ▴';
   }
 }

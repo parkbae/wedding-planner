@@ -318,16 +318,27 @@
   </div>
 
   <div class="budget-setup">
-    <div class="section-label">✦ 총 예산 설정</div>
-    <div class="budget-grid">
-      <div class="bi"><label>신랑 예산</label><div class="iw"><input type="number" id="my-savings" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
-      <div class="bi"><label>신부 예산</label><div class="iw"><input type="number" id="partner-savings" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
-      <div class="bi"><label>양가 지원액</label><div class="iw"><input type="number" id="family-support" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
-      <div class="bi"><label>대출 한도</label><div class="iw"><input type="number" id="loan" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
+    <!-- 모바일 전용 요약 행: 총 가용 예산 + 펼치기 버튼 -->
+    <div class="budget-mobile-header">
+      <div class="budget-mobile-summary">
+        <span class="budget-mobile-lbl">총 가용 예산</span>
+        <span class="budget-mobile-amt" id="total-budget-display-mobile">0 만원</span>
+      </div>
+      <button class="budget-toggle-btn" id="budget-toggle-btn" onclick="toggleBudgetSetup()">예산 설정 펼치기 ▾</button>
     </div>
-    <div class="total-display">
-      <span class="lbl">총 가용 예산</span>
-      <span class="amt" id="total-budget-display">0 만원</span>
+    <!-- 접힘/펼침 대상 영역 -->
+    <div class="budget-collapsible" id="budget-collapsible">
+      <div class="section-label">✦ 총 예산 설정</div>
+      <div class="budget-grid">
+        <div class="bi"><label>신랑 예산</label><div class="iw"><input type="number" id="my-savings" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
+        <div class="bi"><label>신부 예산</label><div class="iw"><input type="number" id="partner-savings" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
+        <div class="bi"><label>양가 지원액</label><div class="iw"><input type="number" id="family-support" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
+        <div class="bi"><label>대출 한도</label><div class="iw"><input type="number" id="loan" placeholder="0" oninput="calcTotal()"><span class="unit">만원</span></div></div>
+      </div>
+      <div class="total-display">
+        <span class="lbl">총 가용 예산</span>
+        <span class="amt" id="total-budget-display">0 만원</span>
+      </div>
     </div>
   </div>
 
@@ -361,6 +372,57 @@
 
   <!-- TAB: 요약 -->
   <div class="main-panel active" id="tab-summary">
+
+    <!-- 오늘의 결혼 준비 현황 -->
+    <div class="stb-section-wrap">
+      <div class="stb-section-header">
+        <span class="stb-section-title">오늘의 결혼 준비 현황</span>
+        <span class="stb-section-phase" id="stb-section-phase">—</span>
+      </div>
+    <div id="summary-today-bar">
+
+      <!-- D-Day -->
+      <div class="stb-card stb-dday" id="stb-dday-card">
+        <div class="stb-card-icon">💍</div>
+        <div class="stb-card-body">
+          <div class="stb-card-label">D-Day</div>
+          <div class="stb-dday-num" id="stb-dday-num">D-???</div>
+          <div class="stb-dday-date" id="stb-dday-date">예식일 미설정</div>
+        </div>
+      </div>
+
+      <!-- 투두 현황 -->
+      <div class="stb-card stb-todo" id="stb-todo-card" onclick="switchMain('tab-todo')" style="cursor:pointer;">
+        <div class="stb-card-icon">✅</div>
+        <div class="stb-card-body">
+          <div class="stb-card-label">이번 구간 투두</div>
+          <div class="stb-card-val" id="stb-todo-val">—</div>
+          <div class="stb-card-sub" id="stb-todo-sub">미완료</div>
+        </div>
+      </div>
+
+      <!-- 업체 잔금 / 다음 미팅 -->
+      <div class="stb-card stb-vendor" id="stb-vendor-card" onclick="switchMain('tab-vendors')" style="cursor:pointer;">
+        <div class="stb-card-icon">📇</div>
+        <div class="stb-card-body">
+          <div class="stb-card-label">업체 잔금 예정</div>
+          <div class="stb-card-val" id="stb-vendor-val">—</div>
+          <div class="stb-card-sub" id="stb-vendor-sub">다음 미팅 없음</div>
+        </div>
+      </div>
+
+      <!-- 하객 현황 -->
+      <div class="stb-card stb-guest" id="stb-guest-card" onclick="switchMain('tab-guests')" style="cursor:pointer;">
+        <div class="stb-card-icon">👥</div>
+        <div class="stb-card-body">
+          <div class="stb-card-label">하객 현황</div>
+          <div class="stb-card-val" id="stb-guest-val">—</div>
+          <div class="stb-card-sub" id="stb-guest-sub">청첩장 전달 —</div>
+        </div>
+      </div>
+
+    </div>
+    </div><!-- /stb-section-wrap -->
 
     <!-- 상단: 예산현황 + 지출요약 + 축의금 3분할 -->
     <div class="summary-top-grid-3">
@@ -435,11 +497,14 @@
 
     <!-- 결제 일정 / 현금흐름 카드 -->
     <div class="payment-schedule-card">
-      <div class="psc-header">
+      <div class="psc-header" onclick="togglePscBody()" style="cursor:pointer;user-select:none;">
         <span class="psc-title">📅 결제 일정 &amp; 현금흐름</span>
-        <span class="psc-badge" id="psc-header-badge">집계 중</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="psc-badge" id="psc-header-badge">집계 중</span>
+          <span class="psc-toggle-btn" id="psc-body-chevron">상세 펼치기 ▾</span>
+        </div>
       </div>
-      <div class="psc-body">
+      <div class="psc-body" id="psc-body" style="display:none;">
         <div class="psc-grid">
           <div class="psc-stat">
             <div class="psc-stat-label">🗓️ 이번 달 납부 예정</div>
@@ -452,7 +517,7 @@
             <div class="psc-stat-sub" id="psc-d30-sub">항목 없음</div>
           </div>
         </div>
-        <div class="psc-list-title">📋 납부 예정 항목 <span id="psc-list-count" style="color:var(--text-l);font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;"></span></div>
+        <div class="psc-list-title" id="psc-list-toggle">📋 납부 예정 항목 <span id="psc-list-count" style="color:var(--text-l);font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;"></span></div>
         <div class="psc-items" id="psc-items-list">
           <div class="psc-empty">납부 예정 항목이 없어요 ✓</div>
         </div>
@@ -461,12 +526,16 @@
     </div>
 
         <!-- 카테고리별 예산 상한선 (인터랙티브 바) -->
-    <div class="card" style="margin-top:20px;">
-      <div class="card-header">
+    <div class="card" style="margin-top:20px;" id="guideline-card-wrap">
+      <div class="card-header" onclick="toggleGuidelineCard()" style="cursor:pointer;user-select:none;">
         <span class="card-title">🎯 카테고리별 예산 상한선</span>
-        <span class="badge badge-ok" id="pct-total-badge">합계 0%</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="badge badge-ok" id="pct-total-badge">합계 0%</span>
+          <span id="guideline-summary-text" style="font-size:11px;color:var(--text-l);"></span>
+          <span id="guideline-chevron" class="psc-toggle-btn">펼치기 ▾</span>
+        </div>
       </div>
-      <div class="card-body">
+      <div class="card-body" id="guideline-card-body" style="display:none;">
         <p style="font-size:12px;color:var(--text-l);margin-bottom:14px;">목표 비중(%)을 설정하면 상한 금액 대비 실제 사용액이 막대바로 표시돼요.</p>
         <div class="pct-total-row">
           <span class="ptl">비중 합계</span>

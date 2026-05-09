@@ -1291,3 +1291,302 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   .eref-body { padding: 10px 12px 8px; }
   .eref-row, .eref-sum-row { font-size: 12px; }
 }
+
+/* ═══════════════════════════════════════════════
+   오늘의 결혼 준비 현황 바 (summary-today-bar)
+   ─────────────────────────────────────────────── */
+.stb-section-wrap {
+  margin-bottom: 18px;
+}
+.stb-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+.stb-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.2px;
+}
+.stb-section-phase {
+  font-size: 11px;
+  background: rgba(44,49,73,0.07);
+  border: 1px solid rgba(44,49,73,0.12);
+  border-radius: 99px;
+  padding: 3px 10px;
+  color: var(--text-l);
+  letter-spacing: 0.3px;
+}
+
+#summary-today-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+/* 공통 카드 베이스 — D-Day + 나머지 3개 동일 구조 */
+.stb-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: background 0.15s, transform 0.15s;
+  min-width: 0;
+}
+
+.stb-card:hover {
+  background: var(--cream);
+}
+
+.stb-card-icon {
+  font-size: 20px;
+  margin-bottom: 8px;
+  display: block;
+  line-height: 1;
+}
+
+.stb-card-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-l);
+  margin-bottom: 5px;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+
+.stb-card-val {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.08;
+  margin-bottom: 6px;
+  letter-spacing: -0.6px;
+}
+
+.stb-card-sub {
+  font-size: 12px;
+  color: var(--text-l);
+  white-space: normal;
+  word-break: keep-all;
+  line-height: 1.45;
+}
+
+/* D-Day 카드 — stb-card 기반, 숫자만 살짝 강조 */
+.stb-dday-num {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  line-height: 1.05;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.stb-dday-date {
+  font-size: 12px;
+  color: var(--text-l);
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 700px) {
+  #summary-today-bar {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .stb-section-title {
+    font-size: 12px;
+  }
+
+  .stb-section-phase {
+    font-size: 11px;
+    padding: 3px 9px;
+  }
+
+  .stb-card {
+    padding: 14px 14px 12px;
+  }
+
+  .stb-card-icon {
+    font-size: 19px;
+    margin-bottom: 7px;
+  }
+
+  .stb-card-label {
+    font-size: 11px;
+  }
+
+  .stb-card-val {
+    font-size: 22px;
+  }
+
+  .stb-dday-num {
+    font-size: 25px;
+  }
+
+  .stb-card-sub,
+  .stb-dday-date {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 420px) {
+  #summary-today-bar {
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+
+  .stb-section-header {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .stb-section-title {
+    font-size: 12px;
+  }
+
+  .stb-section-phase {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .stb-card {
+    padding: 12px 12px 10px;
+    border-radius: 12px;
+  }
+
+  .stb-card-icon {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .stb-card-label {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+
+  .stb-card-val {
+    font-size: 19px;
+    letter-spacing: -0.4px;
+  }
+
+  .stb-dday-num {
+    font-size: 21px;
+    letter-spacing: -0.8px;
+  }
+
+  .stb-card-sub,
+  .stb-dday-date {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+}
+
+/* ── 납부 예정 상세 리스트 접힘 토글 ── */
+.psc-toggle-btn {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-l);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 2px 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+#psc-list-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  transition: background 0.12s;
+}
+#psc-list-toggle:hover { background: var(--cream); }
+#psc-list-chevron { transition: transform 0.2s; }
+#psc-list-chevron.open { transform: rotate(180deg); }
+
+/* ── 예산 상한선 카드 접힘 토글 ── */
+#guideline-card-wrap .card-header {
+  transition: background 0.12s;
+}
+#guideline-card-wrap .card-header:hover { background: var(--cream); }
+#guideline-chevron { transition: transform 0.2s; }
+#guideline-chevron.open { transform: rotate(180deg); }
+
+/* ════════════════════════════════════════════════════════════
+   📱 모바일 총 예산 설정 접힘/펼침
+   PC: 모바일 요약 행 숨김, collapsible 항상 펼침
+   Mobile(≤768px): 요약 행 노출, collapsible 기본 접힘
+   ════════════════════════════════════════════════════════════ */
+
+/* PC: 모바일 전용 요소 숨김, collapsible 항상 표시 */
+.budget-mobile-header { display: none; }
+.budget-collapsible { display: block; }
+
+@media(max-width:768px) {
+  /* 모바일 요약 헤더 행 */
+  .budget-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .budget-mobile-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .budget-mobile-lbl {
+    font-size: 10px;
+    color: var(--gold-light, rgba(201,169,110,0.75));
+    letter-spacing: 1px;
+  }
+  .budget-mobile-amt {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--gold);
+    line-height: 1.2;
+  }
+  .budget-toggle-btn {
+    flex-shrink: 0;
+    background: rgba(201,169,110,0.15);
+    border: 1px solid rgba(201,169,110,0.35);
+    border-radius: 20px;
+    color: var(--gold);
+    font-size: 11px;
+    font-family: 'Noto Sans KR', sans-serif;
+    padding: 6px 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.18s;
+  }
+  .budget-toggle-btn:active {
+    background: rgba(201,169,110,0.28);
+  }
+
+  /* collapsible: 기본 접힘 */
+  .budget-collapsible {
+    display: none;
+    margin-top: 14px;
+  }
+  /* 펼침 상태 */
+  .budget-collapsible.budget-open {
+    display: block;
+  }
+
+  /* collapsible 안 .total-display는 모바일 펼침 시에도 유지 */
+  .budget-collapsible .total-display {
+    margin-top: 0;
+  }
+}
