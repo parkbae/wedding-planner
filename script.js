@@ -2875,7 +2875,6 @@ function openVendorLink(url) {
 }
 
 let vendors = [];
-let vendorIdCounter = 8000;
 
 const VD_STATUS_MAP = {
   '검토중':  { emoji:'🔍', cls:'vd-status-검토중' },
@@ -2886,8 +2885,21 @@ const VD_STATUS_MAP = {
 };
 
 function vdGenId() {
-  vendorIdCounter++;
-  return 'vd-' + vendorIdCounter;
+  return 'vd-' + Date.now() + '-' + Math.floor(Math.random() * 9000 + 1000);
+}
+
+// 중복 id 보정 — 로드/렌더 시 실행, 중복이거나 id 없는 경우에만 새 id 부여
+function repairVendorIds() {
+  var seen = new Set();
+  vendors.forEach(function(v) {
+    var sid = String(v.id || '');
+    if (!sid || seen.has(sid)) {
+      var newId = 'vd-' + Date.now() + '-' + Math.floor(Math.random() * 9000 + 1000);
+      v.id = newId;
+      sid = newId;
+    }
+    seen.add(sid);
+  });
 }
 
 function toggleVendorForm() {
@@ -2941,10 +2953,10 @@ function saveVendor() {
     balanceDate:     document.getElementById('vd-balanceDate').value,
     status:          document.getElementById('vd-status').value,
     memo:            (document.getElementById('vd-memo').value || '').trim(),
-    addedAt:         editId ? (vendors.find(function(v){return v.id===editId;})?.addedAt || new Date().toISOString()) : new Date().toISOString()
+    addedAt:         editId ? (vendors.find(function(v){return String(v.id)===String(editId);})?.addedAt || new Date().toISOString()) : new Date().toISOString()
   };
   if (editId) {
-    var idx = vendors.findIndex(function(v){return v.id===editId;});
+    var idx = vendors.findIndex(function(v){return String(v.id)===String(editId);});
     if (idx >= 0) vendors[idx] = vendor;
     showToast('✅ 업체 정보가 수정됐어요!');
   } else {
@@ -2964,7 +2976,8 @@ function saveVendor() {
 }
 
 function editVendor(id) {
-  var v = vendors.find(function(x){return x.id===id;});
+  var sid = String(id);
+  var v = vendors.find(function(x){return String(x.id)===sid;});
   if (!v) return;
   openVendorFormForAdd();
   document.getElementById('vd-edit-id').value    = v.id;
@@ -3003,7 +3016,7 @@ function cancelVendorEdit() {
 
 function deleteVendor(id) {
   if (!confirm('이 업체를 삭제할까요?')) return;
-  vendors = vendors.filter(function(v){return v.id !== id;});
+  vendors = vendors.filter(function(v){return String(v.id) !== String(id);});
   renderVendors();
   showToast('삭제됐어요');
   saveAll();
@@ -3024,6 +3037,8 @@ function vdFmtDate(dateStr) {
 }
 
 function renderVendors() {
+  // 중복 id 보정 — 렌더 전 항상 실행
+  repairVendorIds();
   // 요약 업데이트
   var cntTotal    = vendors.length;
   var cntContract = vendors.filter(function(v){return v.status==='계약완료';}).length;
@@ -3072,11 +3087,12 @@ function renderVendors() {
       ? (v.link.length > 30 ? v.link.substring(0, 28) + '…' : v.link)
       : '';
     var linkCell = v.link
-      ? '<a class="vd-ext-link" href="javascript:void(0)" onclick="openVendorLink(\'' + v.link.replace(/'/g, '\\\'') + '\')">🔗 ' + linkLabel + '</a>'
+      ? '<a class="vd-ext-link vd-link-btn" href="javascript:void(0)" data-vlink="' + v.link.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">🔗 ' + linkLabel + '</a>'
       : '';
     var memoCell = v.memo
       ? '<span style="font-size:10px;color:var(--text-l);display:block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + v.memo.replace(/"/g,'&quot;') + '">' + v.memo + '</span>'
       : '';
+    var safeId = String(v.id);
     rows += '<tr>' +
       '<td><span style="font-size:10px;color:var(--text-l);">' + (v.category||'') + '</span></td>' +
       '<td><strong>' + v.name + '</strong>' + linkCell + (memoCell ? '<br>' + memoCell : '') + '</td>' +
@@ -3086,8 +3102,8 @@ function renderVendors() {
       '<td>' + vdFmtDate(v.balanceDate) + '</td>' +
       '<td><span class="vd-status-badge ' + stInfo.cls + '">' + stInfo.emoji + ' ' + (v.status||'') + '</span></td>' +
       '<td class="vd-td-actions">' +
-        '<button class="vd-action-btn" onclick="editVendor(\'' + v.id + '\')">수정</button>' +
-        '<button class="vd-action-btn del" onclick="deleteVendor(\'' + v.id + '\')">삭제</button>' +
+        '<button class="vd-action-btn vd-edit-btn" data-vid="' + safeId + '">수정</button>' +
+        '<button class="vd-action-btn del vd-del-btn" data-vid="' + safeId + '">삭제</button>' +
       '</td>' +
     '</tr>';
   });
@@ -3105,6 +3121,32 @@ function renderVendors() {
     '</tr></thead>' +
     '<tbody>' + rows + '</tbody>' +
   '</table>';
+
+  // ── 수정/삭제 버튼 이벤트 직접 바인딩 (onclick 문자열 방식 대체) ──
+  var editBtns = list.querySelectorAll('.vd-edit-btn');
+  for (var ei = 0; ei < editBtns.length; ei++) {
+    (function(btn) {
+      btn.addEventListener('click', function() {
+        editVendor(btn.getAttribute('data-vid'));
+      });
+    })(editBtns[ei]);
+  }
+  var delBtns = list.querySelectorAll('.vd-del-btn');
+  for (var di = 0; di < delBtns.length; di++) {
+    (function(btn) {
+      btn.addEventListener('click', function() {
+        deleteVendor(btn.getAttribute('data-vid'));
+      });
+    })(delBtns[di]);
+  }
+  var linkBtns = list.querySelectorAll('.vd-link-btn');
+  for (var li = 0; li < linkBtns.length; li++) {
+    (function(btn) {
+      btn.addEventListener('click', function() {
+        openVendorLink(btn.getAttribute('data-vlink'));
+      });
+    })(linkBtns[li]);
+  }
 }
 
 // ═══════════════════════════════════════════════
