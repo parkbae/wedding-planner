@@ -644,6 +644,7 @@ function renderExpense() {
           '<thead>' +
             '<tr>' +
               '<th style="width:28px;"></th>' +
+              '<th style="width:28px;"></th>' +
               '<th>항목</th>' +
               '<th>업체명</th>' +
               '<th class="num">계약금</th>' +
@@ -660,7 +661,11 @@ function renderExpense() {
       '</div>';
 
     container.appendChild(div);
-    sec.rows.forEach(row => renderRow(sec.id, row));
+    // 미완료 먼저, 완료 나중 — 실제 배열 순서 변경 없이 렌더링용 정렬만 적용
+    var sortedRows = sec.rows.slice().sort(function(a, b) {
+      return (a.completed ? 1 : 0) - (b.completed ? 1 : 0);
+    });
+    sortedRows.forEach(function(row) { renderRow(sec.id, row); });
     renderSubtotal(sec.id);
   });
   updatePaymentBar();
@@ -673,40 +678,44 @@ function renderRow(secId, row) {
   if (row.depositMode === undefined) {
     row.depositMode = (row.depositAmt && row.depositAmt > 0) ? 'num' : 'none';
   }
+  // completed 필드 없는 구 데이터 호환
+  var isDone = row.completed === true;
   const isNone = row.depositMode === 'none';
   const tr = document.createElement('tr');
   tr.id = 'row-' + row.id;
-  tr.innerHTML = `
-    <td><button class="row-del-btn" onclick="delRow('${secId}','${row.id}')">×</button></td>
-    <td><input class="editable" value="${esc(row.name)}" onchange="updateRow('${secId}','${row.id}','name',this.value)"></td>
-    <td><input class="editable" value="${esc(row.vendor)}" onchange="updateRow('${secId}','${row.id}','vendor',this.value)"></td>
-    <td class="num">
-      <div class="deposit-cell">
-        <select class="deposit-mode" id="dmode-${row.id}" onchange="updateDepositMode('${secId}','${row.id}',this.value)">
-          <option value="none" ${isNone?'selected':''}>없음</option>
-          <option value="num" ${!isNone?'selected':''}>금액</option>
-        </select>
-        <input class="deposit-input" type="number" id="deposit-input-${row.id}"
-          value="${isNone ? '' : (row.depositAmt||'')}"
-          placeholder="0"
-          ${isNone ? 'disabled style="display:none"' : ''}
-          onchange="updateRowNum('${secId}','${row.id}','depositAmt',this.value)">
-      </div>
-    </td>
-    <td><input class="date-edit" value="${esc(row.depositDate)}" placeholder="yy.mm.dd" onchange="updateRow('${secId}','${row.id}','depositDate',this.value)"></td>
-    <td class="num"><input class="num-edit" type="number" id="balance-input-${row.id}" value="${row.balanceAmt||''}" placeholder="0" onchange="updateRowNum('${secId}','${row.id}','balanceAmt',this.value)"></td>
-    <td><input class="date-edit" value="${esc(row.balanceDate)}" placeholder="yy.mm.dd" onchange="updateRow('${secId}','${row.id}','balanceDate',this.value)"></td>
-    <td class="num"><input class="total-edit" type="number" id="rowtotal-input-${row.id}" value="${row.total||''}" placeholder="0" onchange="updateRowTotal('${secId}','${row.id}',this.value)" title="총금액 직접 입력 가능"></td>
-    <td>
-      <select class="select-edit" onchange="updateRow('${secId}','${row.id}','pay',this.value)">
-        <option value="" ${!row.pay?'selected':''}>-</option>
-        <option value="카드" ${row.pay==='카드'?'selected':''}>카드</option>
-        <option value="현금" ${row.pay==='현금'?'selected':''}>현금</option>
-        <option value="상품권" ${row.pay==='상품권'?'selected':''}>상품권</option>
-        <option value="계좌이체" ${row.pay==='계좌이체'?'selected':''}>계좌이체</option>
-      </select>
-    </td>
-    <td class="note-cell"><input class="editable" value="${esc(row.note)}" onchange="updateRow('${secId}','${row.id}','note',this.value)"></td>`;
+  if (isDone) tr.classList.add('exp-row-completed');
+  tr.innerHTML =
+    '<td><button class="row-del-btn" onclick="delRow(\'' + secId + '\',\'' + row.id + '\')">×</button></td>' +
+    '<td><button class="exp-check-btn' + (isDone ? ' checked' : '') + '" onclick="toggleExpenseCompleted(\'' + secId + '\',\'' + row.id + '\')" title="' + (isDone ? '완료 해제' : '완료 처리') + '">' + (isDone ? '✓' : '') + '</button></td>' +
+    '<td><input class="editable" value="' + esc(row.name) + '" onchange="updateRow(\'' + secId + '\',\'' + row.id + '\',\'name\',this.value)"></td>' +
+    '<td><input class="editable" value="' + esc(row.vendor) + '" onchange="updateRow(\'' + secId + '\',\'' + row.id + '\',\'vendor\',this.value)"></td>' +
+    '<td class="num">' +
+      '<div class="deposit-cell">' +
+        '<select class="deposit-mode" id="dmode-' + row.id + '" onchange="updateDepositMode(\'' + secId + '\',\'' + row.id + '\',this.value)">' +
+          '<option value="none"' + (isNone ? ' selected' : '') + '>없음</option>' +
+          '<option value="num"' + (!isNone ? ' selected' : '') + '>금액</option>' +
+        '</select>' +
+        '<input class="deposit-input" type="number" id="deposit-input-' + row.id + '"' +
+          ' value="' + (isNone ? '' : (row.depositAmt || '')) + '"' +
+          ' placeholder="0"' +
+          (isNone ? ' disabled style="display:none"' : '') +
+          ' onchange="updateRowNum(\'' + secId + '\',\'' + row.id + '\',\'depositAmt\',this.value)">' +
+      '</div>' +
+    '</td>' +
+    '<td><input class="date-edit" value="' + esc(row.depositDate) + '" placeholder="yy.mm.dd" onchange="updateRow(\'' + secId + '\',\'' + row.id + '\',\'depositDate\',this.value)"></td>' +
+    '<td class="num"><input class="num-edit" type="number" id="balance-input-' + row.id + '" value="' + (row.balanceAmt || '') + '" placeholder="0" onchange="updateRowNum(\'' + secId + '\',\'' + row.id + '\',\'balanceAmt\',this.value)"></td>' +
+    '<td><input class="date-edit" value="' + esc(row.balanceDate) + '" placeholder="yy.mm.dd" onchange="updateRow(\'' + secId + '\',\'' + row.id + '\',\'balanceDate\',this.value)"></td>' +
+    '<td class="num"><input class="total-edit" type="number" id="rowtotal-input-' + row.id + '" value="' + (row.total || '') + '" placeholder="0" onchange="updateRowTotal(\'' + secId + '\',\'' + row.id + '\',this.value)" title="총금액 직접 입력 가능"></td>' +
+    '<td>' +
+      '<select class="select-edit" onchange="updateRow(\'' + secId + '\',\'' + row.id + '\',\'pay\',this.value)">' +
+        '<option value=""' + (!row.pay ? ' selected' : '') + '>-</option>' +
+        '<option value="카드"' + (row.pay === '카드' ? ' selected' : '') + '>카드</option>' +
+        '<option value="현금"' + (row.pay === '현금' ? ' selected' : '') + '>현금</option>' +
+        '<option value="상품권"' + (row.pay === '상품권' ? ' selected' : '') + '>상품권</option>' +
+        '<option value="계좌이체"' + (row.pay === '계좌이체' ? ' selected' : '') + '>계좌이체</option>' +
+      '</select>' +
+    '</td>' +
+    '<td class="note-cell"><input class="editable" value="' + esc(row.note) + '" onchange="updateRow(\'' + secId + '\',\'' + row.id + '\',\'note\',this.value)"></td>';
   tbody.appendChild(tr);
 }
 
@@ -827,6 +836,26 @@ function delRow(secId, rowId) {
   renderSubtotal(secId);
   updatePaymentBar();
   updateSummary();
+}
+
+// ── 지출 항목 완료 체크 토글 ──
+// completed 필드 toggle → 해당 섹션만 재렌더 (계산 영향 없음)
+function toggleExpenseCompleted(secId, rowId) {
+  var sec = expenseSections.find(function(s) { return s.id === secId; });
+  var row = sec && sec.rows.find(function(r) { return r.id === rowId; });
+  if (!row) return;
+  row.completed = !row.completed;
+  // 섹션 tbody만 재렌더 (전체 renderExpense 불필요 — 성능 최적화)
+  var tbody = document.getElementById('tbody-' + secId);
+  if (!tbody) return;
+  // subtotal-row 제거 후 미완료→완료 순서로 재렌더
+  tbody.innerHTML = '';
+  var sortedRows = sec.rows.slice().sort(function(a, b) {
+    return (a.completed ? 1 : 0) - (b.completed ? 1 : 0);
+  });
+  sortedRows.forEach(function(r) { renderRow(secId, r); });
+  renderSubtotal(secId);
+  saveAll();
 }
 
 // 지출 현황 바 (윤석/혜원 제거)
@@ -2214,10 +2243,6 @@ function applyLoadedData(data) {
     syncGuestCountToSummary();
   }
   if (data.savedAt) updateLastSaved(data.savedAt);
-  // ── vendors/guestState 복원 완료 후 요약탭 today-bar 갱신 ──
-  // 최초 로딩 시 renderTodayBar_Vendor / renderTodayBar_Guest가
-  // switchMain('tab-summary') 없이도 정확한 값을 표시하도록 한다.
-  updateSummary();
 }
 
 // ── 기본 데이터 (회원가입 시 초기화용) ──
