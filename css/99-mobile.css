@@ -75,8 +75,8 @@
   .num-edit{width:72px;}
   .deposit-input{width:56px;}
   .date-edit{width:70px;}
-  /* 완료체크 버튼 모바일 터치 영역 확대 */
-  .exp-check-btn{width:26px;height:26px;font-size:13px;}
+  /* 완료체크 버튼 모바일 터치 영역 확대 (원형 유지) */
+  .exp-check-btn{width:24px;height:24px;font-size:12px;}
 
   /* ── 8. 예산 플래너 ── */
   .guideline-grid{grid-template-columns:1fr 1fr;}
