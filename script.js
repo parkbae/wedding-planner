@@ -2243,6 +2243,8 @@ function applyLoadedData(data) {
     syncGuestCountToSummary();
   }
   if (data.savedAt) updateLastSaved(data.savedAt);
+  // data load 완료 후 today-bar 초기값 동기화 (vendors/guestState 복원 이후 실행)
+  updateSummary();
 }
 
 // ── 기본 데이터 (회원가입 시 초기화용) ──

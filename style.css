@@ -167,26 +167,54 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 
 /* ── 지출내역 완료 체크 ── */
 .exp-check-btn{
-  background:none;border:1.5px solid var(--border);border-radius:5px;
-  width:20px;height:20px;cursor:pointer;display:flex;align-items:center;
-  justify-content:center;font-size:11px;color:transparent;transition:all 0.18s;
+  background:none;
+  border:1.5px solid #d0cdc8;
+  border-radius:50%;
+  width:18px;height:18px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:transparent;
+  transition:border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
   flex-shrink:0;padding:0;line-height:1;
+  opacity:0.6;
 }
-.exp-check-btn:hover{border-color:var(--gold);color:var(--gold);}
+.exp-check-btn:hover{
+  border-color:#7cbb6e;
+  color:#7cbb6e;
+  opacity:1;
+  box-shadow:0 0 0 2px rgba(124,187,110,0.15);
+}
 .exp-check-btn.checked{
-  background:var(--success);border-color:var(--success);color:white;
+  background:#7cbb6e;border-color:#7cbb6e;color:white;
+  opacity:1;
+  box-shadow:none;
+}
+
+/* 완료 행 전체 — opacity 대신 색상/배경으로 처리 (체크버튼 흐림 방지) */
+tr.exp-row-completed{
+  background:#f7f6f2 !important;
 }
 tr.exp-row-completed td{
-  opacity:0.45;
-  background:var(--cream) !important;
+  background:#f7f6f2 !important;
+  color:#b0aea8 !important;
 }
+/* input/select: 색+배경으로 "정리됨" 표현 */
 tr.exp-row-completed td input,
 tr.exp-row-completed td select{
-  text-decoration:line-through;
-  color:var(--text-l);
+  color:#b5b3ae !important;
+  background:#eeece7 !important;
+  border-color:#e2dfd9 !important;
 }
+/* 항목명(3번째 td), 업체명(4번째 td) input에 취소선 강조 */
+tr.exp-row-completed td:nth-child(3) input,
+tr.exp-row-completed td:nth-child(4) input{
+  text-decoration:line-through;
+  text-decoration-color:#c0bdb7;
+}
+/* 체크 버튼은 별도 opacity 보정 (부모 td 색상 상속 차단) */
 tr.exp-row-completed .exp-check-btn{
-  background:var(--success);border-color:var(--success);color:white;
+  background:#7cbb6e;border-color:#7cbb6e;color:white;
+  opacity:1 !important;
 }
 
 .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
