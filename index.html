@@ -978,14 +978,12 @@
 
       <div class="re-form-section">
         <label class="re-form-label">📍 위치 (주소)</label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input class="re-form-input" type="text" id="re-location" placeholder="예) 서울시 마포구 아현동 123-4" style="flex:1;">
-          <button onclick="openMapSearch()" style="background:var(--gold);color:white;border:none;border-radius:9px;padding:9px 14px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;flex-shrink:0;">🗺 지도</button>
+        <input class="re-form-input" type="text" id="re-location" placeholder="예) 서울시 마포구 아현동 123-4">
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <button onclick="openNaverMap()" style="background:white;border:1px solid #03c75a;border-radius:7px;padding:5px 12px;font-size:11px;color:#03c75a;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:600;">N 네이버지도 검색</button>
+          <button onclick="openKakaoMap()" style="background:white;border:1px solid #fee500;border-radius:7px;padding:5px 12px;font-size:11px;color:#3c1e1e;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:600;">K 카카오맵 검색</button>
         </div>
-        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
-          <button onclick="openNaverMap()" style="background:white;border:1px solid #03c75a;border-radius:7px;padding:5px 12px;font-size:11px;color:#03c75a;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:600;">N 네이버지도</button>
-          <button onclick="openKakaoMap()" style="background:white;border:1px solid #fee500;border-radius:7px;padding:5px 12px;font-size:11px;color:#3c1e1e;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:600;">K 카카오맵</button>
-        </div>
+        <p style="margin:6px 0 0;font-size:10px;color:var(--text-l);line-height:1.5;">지도에서 찾은 주소는 자동 반영되지 않아요. 지도에서 확인한 주소를 위치 입력칸에 직접 붙여넣어 주세요.</p>
       </div>
 
       <div class="re-form-section">

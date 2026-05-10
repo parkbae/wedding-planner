@@ -262,9 +262,10 @@ function renderReGrid() {
           ${priceMonthly}${priceJeonse}${priceBuy}${priceEmpty}
         </div>
         <div class="re-meta-row">
-          ${p.area ? `<span class="re-meta-item">📐 <span class="val">${p.area}㎡</span></span>` : ''}
+          ${(p.areaExclusiveM2||p.area) ? `<span class="re-meta-item">📐 <span class="val">${p.areaExclusiveM2||p.area}㎡</span></span>` : ''}
           ${p.floor ? `<span class="re-meta-item">🏢 <span class="val">${esc(p.floor)}</span></span>` : ''}
           ${p.movein ? `<span class="re-meta-item">📅 <span class="val">${esc(p.movein)}</span></span>` : ''}
+          ${(p.maintenanceFee||p.maintenance||p.maintenanceAmt) ? `<span class="re-meta-item">🧾 <span class="val">관리비 ${fmt(p.maintenanceFee||p.maintenance||p.maintenanceAmt)}만원</span></span>` : ''}
         </div>
         ${p.link ? `<div class="re-link-row"><a href="${esc(p.link)}" target="_blank">🔗 ${esc(p.link)}</a></div>` : ''}
         ${p.memo ? `<div class="re-memo-box">${esc(p.memo)}</div>` : ''}
@@ -284,44 +285,64 @@ function reFilterBy(type, btn) {
   renderReGrid();
 }
 
+function setReValue(id, value) {
+  var el = document.getElementById(id);
+  if (el) el.value = (value !== null && value !== undefined) ? value : '';
+}
+function getReValue(id) {
+  var el = document.getElementById(id);
+  return el ? el.value : '';
+}
+
 function openReModal(editId) {
   reEditId = editId || null;
   reActiveTypes = new Set();
-  // 폼 초기화
-  ['re-name','re-location','re-monthly-deposit','re-monthly-rent','re-jeonse-price','re-buy-price','re-area','re-floor','re-movein','re-link','re-memo'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
+  // 폼 초기화 (re-area 단일 필드 제거, 4개 분리 필드 + direction/maintenance-fee 포함)
+  ['re-name','re-location','re-monthly-deposit','re-monthly-rent','re-jeonse-price','re-buy-price',
+   're-area-exclusive-m2','re-area-exclusive-p','re-area-supply-m2','re-area-supply-p',
+   're-floor','re-movein','re-link','re-memo','re-maintenance-fee'].forEach(function(id) {
+    setReValue(id, '');
   });
-  document.getElementById('re-status').value = '검토중';
-  ['monthly','jeonse','buy'].forEach(t => {
-    const btn = document.getElementById('rtt-'+t);
+  setReValue('re-direction', '');
+  setReValue('re-status', '검토중');
+  ['monthly','jeonse','buy'].forEach(function(t) {
+    var btn = document.getElementById('rtt-'+t);
     if (btn) { btn.className = 're-type-toggle'; }
-    const sec = document.getElementById('re-'+t+'-section');
+    var sec = document.getElementById('re-'+t+'-section');
     if (sec) sec.style.display = 'none';
   });
   document.getElementById('re-modal-title').textContent = editId ? '🏠 매물 수정' : '🏠 매물 등록';
 
   if (editId) {
-    const p = reProperties.find(r => r.id === editId);
+    var p = reProperties.find(function(r) { return r.id === editId; });
     if (p) {
-      document.getElementById('re-name').value = p.name||'';
-      document.getElementById('re-location').value = p.location||'';
-      document.getElementById('re-area').value = p.area||'';
-      document.getElementById('re-floor').value = p.floor||'';
-      document.getElementById('re-movein').value = p.movein||'';
-      document.getElementById('re-link').value = p.link||'';
-      document.getElementById('re-memo').value = p.memo||'';
-      document.getElementById('re-status').value = p.status||'검토중';
-      (p.types||[]).forEach(t => {
+      setReValue('re-name', p.name);
+      setReValue('re-location', p.location);
+      // 면적 4개 필드 개별 복원
+      setReValue('re-area-exclusive-m2', p.areaExclusiveM2);
+      setReValue('re-area-exclusive-p',  p.areaExclusiveP);
+      setReValue('re-area-supply-m2',    p.areaSupplyM2);
+      setReValue('re-area-supply-p',     p.areaSupplyP);
+      // 기존 p.area(단일값) 폴백: 이전 데이터 호환
+      if (!p.areaExclusiveM2 && p.area) setReValue('re-area-exclusive-m2', p.area);
+      setReValue('re-floor', p.floor);
+      setReValue('re-movein', p.movein);
+      setReValue('re-link', p.link);
+      setReValue('re-memo', p.memo);
+      setReValue('re-direction', p.direction);
+      setReValue('re-maintenance-fee', p.maintenanceFee);
+      setReValue('re-status', p.status || '검토중');
+      (p.types||[]).forEach(function(t) {
         reActiveTypes.add(t);
-        const btn = document.getElementById('rtt-'+t);
+        var btn = document.getElementById('rtt-'+t);
         if (btn) btn.className = 're-type-toggle on-'+t;
-        const sec = document.getElementById('re-'+t+'-section');
+        var sec = document.getElementById('re-'+t+'-section');
         if (sec) sec.style.display = 'block';
       });
-      if (p.monthlyDeposit) document.getElementById('re-monthly-deposit').value = p.monthlyDeposit;
-      if (p.monthlyRent)    document.getElementById('re-monthly-rent').value = p.monthlyRent;
-      if (p.jeonsePrice)    document.getElementById('re-jeonse-price').value = p.jeonsePrice;
-      if (p.buyPrice)       document.getElementById('re-buy-price').value = p.buyPrice;
+      if (p.monthlyDeposit) setReValue('re-monthly-deposit', p.monthlyDeposit);
+      if (p.monthlyRent)    setReValue('re-monthly-rent', p.monthlyRent);
+      if (p.jeonsePrice)    setReValue('re-jeonse-price', p.jeonsePrice);
+      if (p.buyPrice)       setReValue('re-buy-price', p.buyPrice);
     }
   }
   document.getElementById('re-modal-overlay').classList.add('open');
@@ -346,28 +367,37 @@ function toggleReType(type, btn) {
 }
 
 function saveReProperty() {
-  const name = document.getElementById('re-name').value.trim();
+  var name = getReValue('re-name').trim();
   if (!name) { showToast('부동산명을 입력해주세요'); return; }
-  const prop = {
+  var existing = reEditId ? reProperties.find(function(r) { return r.id === reEditId; }) : null;
+  var prop = {
     id: reEditId || ('re' + Date.now()),
-    name,
-    location: document.getElementById('re-location').value.trim(),
+    name: name,
+    location: getReValue('re-location').trim(),
     types: Array.from(reActiveTypes),
-    monthlyDeposit: parseFloat(document.getElementById('re-monthly-deposit').value)||0,
-    monthlyRent: parseFloat(document.getElementById('re-monthly-rent').value)||0,
-    jeonsePrice: parseFloat(document.getElementById('re-jeonse-price').value)||0,
-    buyPrice: parseFloat(document.getElementById('re-buy-price').value)||0,
-    area: parseFloat(document.getElementById('re-area').value)||0,
-    floor: document.getElementById('re-floor').value.trim(),
-    movein: document.getElementById('re-movein').value.trim(),
-    link: document.getElementById('re-link').value.trim(),
-    memo: document.getElementById('re-memo').value.trim(),
-    status: document.getElementById('re-status').value,
-    fav: reEditId ? (reProperties.find(r=>r.id===reEditId)?.fav || false) : false,
-    addedAt: reEditId ? (reProperties.find(r=>r.id===reEditId)?.addedAt || new Date().toISOString()) : new Date().toISOString(),
+    monthlyDeposit: parseFloat(getReValue('re-monthly-deposit'))||0,
+    monthlyRent:    parseFloat(getReValue('re-monthly-rent'))||0,
+    jeonsePrice:    parseFloat(getReValue('re-jeonse-price'))||0,
+    buyPrice:       parseFloat(getReValue('re-buy-price'))||0,
+    // 면적 4개 필드 개별 저장
+    areaExclusiveM2: parseFloat(getReValue('re-area-exclusive-m2'))||0,
+    areaExclusiveP:  parseFloat(getReValue('re-area-exclusive-p'))||0,
+    areaSupplyM2:    parseFloat(getReValue('re-area-supply-m2'))||0,
+    areaSupplyP:     parseFloat(getReValue('re-area-supply-p'))||0,
+    // 기존 area 필드 호환 유지 (전용면적 m2 값 사용)
+    area: parseFloat(getReValue('re-area-exclusive-m2'))||0,
+    floor:          getReValue('re-floor').trim(),
+    movein:         getReValue('re-movein').trim(),
+    link:           getReValue('re-link').trim(),
+    memo:           getReValue('re-memo').trim(),
+    direction:      getReValue('re-direction'),
+    maintenanceFee: parseFloat(getReValue('re-maintenance-fee'))||0,
+    status:         getReValue('re-status'),
+    fav:     existing ? (existing.fav || false) : false,
+    addedAt: existing ? (existing.addedAt || new Date().toISOString()) : new Date().toISOString(),
   };
   if (reEditId) {
-    const idx = reProperties.findIndex(r => r.id === reEditId);
+    var idx = reProperties.findIndex(function(r) { return r.id === reEditId; });
     if (idx >= 0) reProperties[idx] = prop;
   } else {
     reProperties.push(prop);
@@ -380,40 +410,138 @@ function saveReProperty() {
 
 function editReProperty(id) { openReModal(id); }
 
+// 면적 자동 변환 (m2 ↔ 평, 1평 = 3.30579㎡)
+function reAutoConvert(zone, unit, val) {
+  var v = parseFloat(val);
+  if (!val || isNaN(v) || v <= 0) return;
+  var M2_PER_PYEONG = 3.30579;
+  if (zone === 'exclusive') {
+    if (unit === 'm2') {
+      setReValue('re-area-exclusive-p', Math.round(v / M2_PER_PYEONG * 10) / 10);
+    } else {
+      setReValue('re-area-exclusive-m2', Math.round(v * M2_PER_PYEONG * 10) / 10);
+    }
+  } else if (zone === 'supply') {
+    if (unit === 'm2') {
+      setReValue('re-area-supply-p', Math.round(v / M2_PER_PYEONG * 10) / 10);
+    } else {
+      setReValue('re-area-supply-m2', Math.round(v * M2_PER_PYEONG * 10) / 10);
+    }
+  }
+}
+
 function deleteReProperty(id) {
   if (!confirm('이 매물을 삭제할까요?')) return;
-  reProperties = reProperties.filter(p => p.id !== id);
+  reProperties = reProperties.filter(function(p) { return p.id !== id; });
   renderReGrid();
   showToast('삭제됐어요');
   saveAll();
 }
 
 function toggleReFav(id) {
-  const p = reProperties.find(r => r.id === id);
+  var p = reProperties.find(function(r) { return r.id === id; });
   if (p) { p.fav = !p.fav; renderReGrid(); saveAll(); }
 }
 
+// 지도 검색 공통 함수 (위치→매물명 우선순위)
+function getReSearchKeyword() {
+  var loc = getReValue('re-location').trim();
+  var nm  = getReValue('re-name').trim();
+  return loc || nm || '';
+}
+
 function openMapSearch() {
-  const loc = document.getElementById('re-location').value.trim() || document.getElementById('re-name').value.trim();
-  if (!loc) { showToast('주소를 먼저 입력해주세요'); return; }
-  window.open('https://map.naver.com/v5/search/' + encodeURIComponent(loc), '_blank');
+  var kw = getReSearchKeyword();
+  if (!kw) { showToast('매물명이나 주소를 먼저 입력해주세요'); return; }
+  window.open('https://map.naver.com/v5/search/' + encodeURIComponent(kw), '_blank', 'noopener,noreferrer');
 }
 
 function openNaverMap() {
-  const loc = document.getElementById('re-location').value.trim() || document.getElementById('re-name').value.trim();
-  window.open('https://map.naver.com/v5/search/' + encodeURIComponent(loc||'서울'), '_blank');
+  var kw = getReSearchKeyword();
+  if (!kw) { showToast('매물명이나 주소를 먼저 입력해주세요'); return; }
+  window.open('https://map.naver.com/v5/search/' + encodeURIComponent(kw), '_blank', 'noopener,noreferrer');
 }
 
 function openKakaoMap() {
-  const loc = document.getElementById('re-location').value.trim() || document.getElementById('re-name').value.trim();
-  window.open('https://map.kakao.com/?q=' + encodeURIComponent(loc||'서울'), '_blank');
+  var kw = getReSearchKeyword();
+  if (!kw) { showToast('매물명이나 주소를 먼저 입력해주세요'); return; }
+  window.open('https://map.kakao.com/?q=' + encodeURIComponent(kw), '_blank', 'noopener,noreferrer');
 }
 
-// 모달 오버레이 외부 클릭 닫기
-document.addEventListener('DOMContentLoaded', () => {
-  const overlay = document.getElementById('re-modal-overlay');
-  if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) closeReModal(); });
-});
+// 주소 복사
+function copyReAddress() {
+  var addr = getReValue('re-location').trim();
+  if (!addr) { showToast('복사할 주소나 위치를 먼저 입력해주세요.'); return; }
+  var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  var successMsg = isMobile
+    ? '주소가 복사됐어요. 지도 검색창을 길게 눌러 붙여넣으세요.'
+    : '주소가 복사됐어요. 지도 검색창에서 Ctrl+V로 붙여넣으세요.';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(addr).then(function() {
+      showToast(successMsg);
+    }).catch(function() {
+      reCopyFallback(addr, successMsg);
+    });
+  } else {
+    reCopyFallback(addr, successMsg);
+  }
+}
+
+function reCopyFallback(text, successMsg) {
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    var ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast(ok ? successMsg : '자동 복사가 안 됐어요. 주소를 직접 선택해서 Ctrl+C로 복사해 주세요.');
+  } catch(e) {
+    showToast('자동 복사가 안 됐어요. 주소를 직접 선택해서 Ctrl+C로 복사해 주세요.');
+  }
+}
+
+// 부동산 모달: overlay 바깥을 직접 클릭한 경우에만 닫기
+// - mousedown이 overlay에서 시작되고 click도 overlay일 때만 닫기
+// - 모달 내부 input에서 mousedown 후 overlay로 드래그해서 mouseup/click 시 닫히지 않음
+// - mouseleave / blur 등으로 닫히는 로직 없음
+(function() {
+  function bindReModalClose() {
+    var overlay = document.getElementById('re-modal-overlay');
+    if (!overlay) return;
+    var modal = overlay.querySelector('.re-modal');
+    // mousedown 시작 위치 추적 플래그
+    var mouseDownOnOverlay = false;
+    overlay.addEventListener('mousedown', function(e) {
+      mouseDownOnOverlay = (e.target === overlay);
+    });
+    // click은 mousedown과 mouseup이 같은 위치일 때만 의미 있음
+    // mousedown이 overlay에서 시작된 경우만 닫기
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay && mouseDownOnOverlay) {
+        closeReModal();
+      }
+      mouseDownOnOverlay = false;
+    });
+    // modal 내부 클릭 버블링 차단 (보조 방어)
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+      modal.addEventListener('mousedown', function(e) {
+        e.stopPropagation();
+      });
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindReModalClose);
+  } else {
+    bindReModalClose();
+  }
+})();
 
 
 // ── 초기화 ──
