@@ -2214,6 +2214,10 @@ function applyLoadedData(data) {
     syncGuestCountToSummary();
   }
   if (data.savedAt) updateLastSaved(data.savedAt);
+  // ── vendors/guestState 복원 완료 후 요약탭 today-bar 갱신 ──
+  // 최초 로딩 시 renderTodayBar_Vendor / renderTodayBar_Guest가
+  // switchMain('tab-summary') 없이도 정확한 값을 표시하도록 한다.
+  updateSummary();
 }
 
 // ── 기본 데이터 (회원가입 시 초기화용) ──
