@@ -67,7 +67,7 @@
   /* ── 7. 지출 내역 — 테이블 가로 스크롤 ── */
   .exp-section{overflow-x:visible;}
   .exp-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .exp-table-wrap .exp-table{min-width:560px;}   /* 테이블 최소폭 확보, 부모 스크롤 */
+  .exp-table-wrap .exp-table{min-width:580px;}   /* 완료체크 열 추가로 560→580px 확대 */
   /* 페이지 전체 width 깨짐 방지 */
   #tab-expense{overflow-x:hidden;}
   .exp-table{font-size:11px;}
@@ -75,6 +75,8 @@
   .num-edit{width:72px;}
   .deposit-input{width:56px;}
   .date-edit{width:70px;}
+  /* 완료체크 버튼 모바일 터치 영역 확대 */
+  .exp-check-btn{width:26px;height:26px;font-size:13px;}
 
   /* ── 8. 예산 플래너 ── */
   .guideline-grid{grid-template-columns:1fr 1fr;}
