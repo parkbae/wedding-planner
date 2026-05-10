@@ -1,0 +1,221 @@
+/* ════════════════════════════════════════════════════════════
+   📱 모바일 반응형 1차 개선 — @media(max-width:768px)
+   PC/데스크톱 화면에 영향 없음 (모바일 전용 블록)
+   ════════════════════════════════════════════════════════════ */
+@media(max-width:768px){
+
+  /* ── 1. 메인 탭 영역 ── */
+  .main-tabs{
+    display:flex;
+    flex-wrap:nowrap;              /* ★ 줄바꿈 완전 차단 */
+    align-items:center;            /* ★ 수직 중앙 고정 */
+    overflow-x:auto;
+    overflow-y:hidden;             /* ★ Y축 스크롤/흔들림 차단 */
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;          /* Firefox 스크롤바 숨김 */
+    height:44px;                   /* ★ 컨테이너 높이 고정 */
+    padding-bottom:0;              /* 고정 높이 사용으로 padding 제거 */
+    border-bottom:2px solid var(--border); /* PC 스타일 유지 */
+    margin-bottom:16px;
+  }
+  .main-tabs::-webkit-scrollbar{display:none;}   /* Chrome/Safari 스크롤바 숨김 */
+  .main-tab{
+    flex:0 0 auto;                 /* ★ 너비 자동 고정, 절대 축소 금지 */
+    padding:0 14px;                /* ★ 상하 padding 제거 → line-height로 높이 통일 */
+    height:44px;                   /* ★ 탭 버튼 높이 컨테이너와 동일하게 고정 */
+    line-height:44px;              /* ★ 텍스트 수직 중앙 고정 */
+    font-size:12px;
+    white-space:nowrap;
+    border-bottom:3px solid transparent;
+    margin-bottom:-2px;
+    box-sizing:border-box;
+  }
+  .main-tab.active{
+    border-bottom-color:var(--gold);
+    font-weight:700;
+    /* ★ font-weight 변화로 인한 너비 변동이 높이에 영향 없도록 height/line-height 고정 유지 */
+    height:44px;
+    line-height:44px;
+    padding:0 14px;
+  }
+
+  /* ── 2. 헤더 ── */
+  .header{padding:22px 0 18px;}
+  .header h1{font-size:22px;}
+  .header-sub{font-size:11px;}
+  .header-account-email{max-width:140px;}
+  .hdr-btn{padding:5px 11px;font-size:10px;}
+
+  /* ── 3. 컨테이너 좌우 여백 축소 ── */
+  .container{padding:18px 10px 80px;}
+
+  /* ── 4. 총 예산 설정 ── */
+  .budget-setup{padding:18px 16px;}
+  .budget-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .total-display .amt{font-size:20px;}
+
+  /* ── 5. 카드 내부 여백 ── */
+  .card-header{padding:14px 16px 12px;}
+  .card-body{padding:14px 16px;}
+
+  /* ── 6. 요약 탭 ── */
+  .summary-grid{grid-template-columns:1fr;}
+  .payment-status{gap:10px;}
+  .ps-item{min-width:unset;}
+  .gc-input{width:60px;}
+
+  /* ── 7. 지출 내역 — 테이블 가로 스크롤 ── */
+  .exp-section{overflow-x:visible;}
+  .exp-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .exp-table-wrap .exp-table{min-width:560px;}   /* 테이블 최소폭 확보, 부모 스크롤 */
+  /* 페이지 전체 width 깨짐 방지 */
+  #tab-expense{overflow-x:hidden;}
+  .exp-table{font-size:11px;}
+  .exp-table th,.exp-table td{padding:7px 6px;}
+  .num-edit{width:72px;}
+  .deposit-input{width:56px;}
+  .date-edit{width:70px;}
+
+  /* ── 8. 예산 플래너 ── */
+  .guideline-grid{grid-template-columns:1fr 1fr;}
+  .cost-tabs{padding:0 10px;}
+  .cost-panel{padding:14px 14px;}
+
+  /* ── 9. 투두 리스트 ── */
+  .todo-tabs{padding:0 10px;}
+  .todo-panel{padding:14px 14px;}
+  .todo-item{gap:6px;padding:9px 10px;}
+  .todo-edit-hint{display:none;}            /* 모바일: 힌트 숨김 — 공간 확보 */
+  /* 이동 드롭다운 화면 밖 방지 */
+  .move-menu{right:auto;left:0;min-width:150px;}
+
+  /* ── 10. FAB 패널 ── */
+  .fab-panel{
+    right:12px;
+    bottom:12px;
+  }
+  .fab-panel-body{
+    width:calc(100vw - 48px);
+    max-width:320px;
+    max-height:70vh;
+    overflow-y:auto;
+  }
+  .fab-toggle-btn{
+    margin-left:auto;
+  }
+  .fab-btn{
+    right:12px;
+    bottom:12px;
+  }
+  .fab-action-label{font-size:9px;}
+
+  /* ── 11. 모달 공통 ── */
+  .modal{
+    width:calc(100vw - 32px);
+    max-width:360px;
+    max-height:90vh;
+    overflow-y:auto;
+    padding:18px;
+  }
+  .auth-modal{
+    width:calc(100vw - 32px);
+    max-width:340px;
+    padding:22px 18px;
+  }
+  /* 메모 추가 모달 */
+  .modal-overlay > .modal{padding:18px;}
+
+  /* ── 12. 부동산 ── */
+  .re-modal{
+    width:calc(100vw - 24px);
+    max-width:460px;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .re-modal-body{padding:16px 16px;}
+  .re-modal-footer{padding:10px 16px 16px;}
+  .re-grid{grid-template-columns:1fr;}
+  .re-header-bar{flex-direction:column;align-items:flex-start;}
+  .re-filter-tabs{flex-wrap:wrap;}
+  .re-budget-link-bar{flex-direction:column;gap:8px;padding:14px 16px;}
+  .re-budget-items{flex-direction:row;flex-wrap:wrap;gap:14px;}
+  .re-price-grid{grid-template-columns:1fr 1fr;}
+
+  /* ── 13. 업체관리 ── */
+  .vd-summary-row{grid-template-columns:repeat(2,1fr);gap:10px;}
+  /* 필터 드롭다운 줄바꿈 허용 */
+  .card-header{flex-wrap:wrap;}
+  /* 폼 그리드: 모바일 1열 */
+  .vd-form-grid{grid-template-columns:1fr;}
+  .vd-form-input,.vd-form-input select,.vd-textarea{
+    font-size:14px;           /* iOS에서 자동 줌 방지 (16px 미만 → 줌 발생) */
+    padding:11px 12px;
+  }
+  .vd-add-btn,.vd-cancel-btn{padding:11px 16px;font-size:13px;}
+  /* 업체 목록 테이블 가로 스크롤 */
+  #tab-vendors .card-body{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .vd-list-table{min-width:480px;font-size:11px;}
+  .vd-list-table th,.vd-list-table td{padding:8px 8px;}
+
+  /* ── 14. 하객관리 ── */
+  .gs-summary-row{grid-template-columns:repeat(3,1fr);gap:6px;}
+  .gs-sum-card{padding:8px 6px;}
+  .gs-sum-val{font-size:18px;}
+  .gs-sum-label{font-size:8px;}
+  /* 폼 인풋 iOS 줌 방지 */
+  .gs-form-input{font-size:14px;padding:10px 11px;}
+  .gs-add-btn{padding:10px 14px;font-size:13px;}
+  .gs-rsvp-select{font-size:11px;padding:4px 5px;}
+  .gs-invite-cb{width:16px;height:16px;}   /* 터치 영역 확대 */
+  /* 직접입력 목록 테이블 가로 스크롤 */
+  #tab-guests .card-body{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .gs-table{min-width:420px;font-size:11px;}
+  .gs-table th,.gs-table td{padding:8px 7px;}
+  /* 숫자입력 목록도 스크롤 허용 */
+  .gs-bulk-table{min-width:280px;}
+  /* +/- 버튼 터치 영역 확대 */
+  .gs-count-btn{width:30px;height:30px;font-size:16px;}
+
+  /* ── 15. 요청함 ── */
+  .req-form-row{flex-direction:column;gap:8px;}
+  .req-form-select{min-width:unset;width:100%;font-size:14px;padding:10px 12px;}
+  .req-submit-btn{width:100%;padding:11px;font-size:13px;}
+  .req-form-textarea{font-size:14px;}
+  .request-header{flex-wrap:wrap;gap:6px;}
+  .request-actions{flex-wrap:wrap;gap:6px;}
+
+  /* ── 16. 결제일정 카드 ── */
+  .psc-grid{grid-template-columns:1fr;}
+}
+
+/* ════════════════════════════════════════════════════════════
+   📱 모바일 극소폭 (max-width:480px) 추가 조정
+   ════════════════════════════════════════════════════════════ */
+@media(max-width:480px){
+
+  /* 예산 그리드 1열 */
+  .budget-grid{grid-template-columns:1fr;}
+  .total-display .amt{font-size:18px;}
+
+  /* 요약 상단 */
+  .summary-top-grid,.summary-top-grid-3{grid-template-columns:1fr;}
+
+  /* 예산 플래너 가이드라인 카드 1열 */
+  .guideline-grid{grid-template-columns:1fr;}
+
+  /* 하객관리 요약카드 — 2열로 줄임 */
+  .gs-summary-row{grid-template-columns:repeat(2,1fr);}
+
+  /* 업체관리 요약카드 */
+  .vd-summary-row{grid-template-columns:repeat(2,1fr);}
+
+  /* 부동산 모달 폼 그리드 1열 */
+  .re-form-row,.re-form-row-3{grid-template-columns:1fr;}
+
+  /* 투두 이동버튼 텍스트 줄임 */
+  .todo-move-btn{font-size:9px;padding:3px 6px;}
+
+  /* 카드 여백 최소화 */
+  .card-header{padding:12px 12px 10px;}
+  .card-body{padding:12px 12px;}
+}
